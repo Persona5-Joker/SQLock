@@ -151,7 +151,7 @@ This project is maintained by the following group members:
     
 - Faizan-Ali Lalani
     
-- Caiyun Huang
+- Caiyun (Katie) Huang
     
 
 ## 🌟 Acknowledgments
