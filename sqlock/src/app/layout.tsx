@@ -7,6 +7,10 @@ import { Geist } from "next/font/google";
 import { TRPCReactProvider } from "~/trpc/react";
 import teamData from "~/data/team.json";
 
+type TeamMember = { name: string; role?: string; linkedin?: string; img?: string };
+type TeamData = { projectRepo?: string; team?: TeamMember[] };
+const _teamData = teamData as TeamData;
+
 export const metadata: Metadata = {
   title: "SQLock",
   description: "SQLock - SQLi detection demo",
@@ -47,9 +51,9 @@ export default function RootLayout({
                 </div>
               </div>
 
-              <div className="flex-shrink-0">
+                <div className="flex-shrink-0">
                 <a
-                  href={(teamData as any).projectRepo}
+                  href={_teamData.projectRepo}
                   target="_blank"
                   rel="noreferrer"
                   className="p-2 rounded hover:bg-slate-800"
