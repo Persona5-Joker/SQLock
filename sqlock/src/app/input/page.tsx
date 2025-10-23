@@ -84,8 +84,8 @@ export default function InputPage() {
     <div className="max-w-6xl mx-auto">
       <h1 className="text-2xl font-bold mb-4">SQLock – Input Simulation</h1>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="md:col-span-2">
+      <div className="space-y-6">
+        <div>
           <form onSubmit={handleSubmit}>
             <label className="block mb-2 font-medium">SQL Input</label>
             <textarea
@@ -145,16 +145,11 @@ export default function InputPage() {
               </button>
             </div>
 
-            <div className="mt-4">
-              <div className="inline-block p-3 border rounded bg-white">
-                <div className="font-semibold">Decision: {result.decision ?? "-"}</div>
-                <div>Suspicion Score: {result.score ?? "-"}</div>
-              </div>
-            </div>
+            {/* Decision display intentionally removed to keep the input UI compact */}
           </form>
         </div>
 
-        <div className="md:col-span-1">
+        <div>
           <div className="p-4 border rounded bg-white min-h-[200px]">
             <div className="flex items-center justify-between mb-2">
               <div className="font-semibold">{serverRows ? "Live DB Results" : "Simulated DB Output"}</div>
@@ -179,28 +174,28 @@ export default function InputPage() {
               <div className="mt-2 p-2 border rounded bg-red-50 text-red-700 text-sm">Server error: {serverError}</div>
             )}
 
-              {lastQuery && output.type === "rows" && (
-                <div className="overflow-x-auto mt-2">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="bg-gray-100">
-                        {(serverRows ? serverRows.columns : output.columns).map((c: string) => (
-                          <th key={c} className="px-2 py-1 text-left">{c}</th>
+            {lastQuery && output.type === "rows" && (
+              <div className="overflow-x-auto mt-2">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="bg-gray-100">
+                      {(serverRows ? serverRows.columns : output.columns).map((c: string) => (
+                        <th key={c} className="px-2 py-1 text-left">{c}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {(serverRows ? serverRows.rows : (output.rows as Row[])).map((r: Row, i: number) => (
+                      <tr key={i} className="border-t">
+                        {r.map((v: string | number | null, j: number) => (
+                          <td key={j} className="px-2 py-1 align-top">{String(v)}</td>
                         ))}
                       </tr>
-                    </thead>
-                    <tbody>
-                      {(serverRows ? serverRows.rows : (output.rows as Row[])).map((r: Row, i: number) => (
-                        <tr key={i} className="border-t">
-                          {r.map((v: string | number | null, j: number) => (
-                            <td key={j} className="px-2 py-1 align-top">{String(v)}</td>
-                          ))}
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
         </div>
       </div>
