@@ -3,9 +3,8 @@ import { HydrateClient } from "~/trpc/server";
 import teamData from "~/data/team.json";
 
 export default async function Home() {
-  const { team, projectRepo } = teamData as {
+  const { team } = teamData as {
     team: { name: string; role: string; img: string; linkedin: string }[];
-    projectRepo: string;
   };
 
   return (
@@ -42,54 +41,26 @@ export default async function Home() {
             <h2 className="text-2xl font-semibold mb-4">Team</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
               {team.map((m) => (
-                <div
+                <a
                   key={m.name}
-                  className="flex items-center gap-4 rounded-md border p-4 bg-white hover:shadow-lg transition"
+                  href={m.linkedin}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex items-center gap-4 rounded-md border p-4 bg-white hover:shadow-lg transition no-underline"
                 >
                   <div className="w-16 h-16 rounded-full overflow-hidden bg-gray-100 flex items-center justify-center">
                     <Image src={m.img} alt={m.name} width={64} height={64} />
                   </div>
                   <div>
-                    <div className="font-semibold">{m.name}</div>
+                    <div className="font-semibold text-gray-900">{m.name}</div>
                     <div className="text-sm text-gray-500">{m.role}</div>
                   </div>
-                </div>
+                </a>
               ))}
             </div>
           </section>
 
-          <section>
-            <h2 className="text-2xl font-semibold mb-4">Links</h2>
-            <div className="rounded-md border p-4 bg-white">
-              <div className="mb-3">
-                <a
-                  className="text-blue-600 hover:underline"
-                  href={projectRepo}
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  Project GitHub Repository
-                </a>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                {team.map((m) => (
-                  <a
-                    key={m.name}
-                    className="flex items-center gap-3 p-2 rounded hover:bg-gray-50"
-                    href={m.linkedin}
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    <div className="w-8 h-8 rounded-full overflow-hidden bg-gray-100 flex items-center justify-center">
-                      <Image src={m.img} alt={m.name} width={32} height={32} />
-                    </div>
-                    <div className="text-sm text-gray-700">{m.name} — LinkedIn</div>
-                  </a>
-                ))}
-              </div>
-            </div>
-          </section>
+          
         </div>
       </main>
     </HydrateClient>
