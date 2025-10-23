@@ -31,6 +31,9 @@ declare module "next-auth" {
  * @see https://next-auth.js.org/configuration/options
  */
 export const authConfig = {
+  // Ensure a secret is available. In production you must set AUTH_SECRET or NEXTAUTH_SECRET.
+  // For local development we fall back to a stable dev secret so the dev server doesn't crash.
+  secret: process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET ?? (process.env.NODE_ENV === "production" ? undefined : "sqlock-dev-secret"),
   providers: [
     DiscordProvider,
     /**

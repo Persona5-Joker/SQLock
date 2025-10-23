@@ -19,3 +19,19 @@ model employee_info {
   bank_routing_number String?  @db.VarChar(50)
   Address             String?  @db.VarChar(50)
 }
+
+// Security logging table used by the app. Mapped to the existing
+// database table name `Security_Event` so this change is non-destructive.
+model SecurityEvent {
+  id               Int      @id @default(autoincrement())
+  ts_utc           DateTime @default(now())
+  user_id          String?  @db.VarChar(255)
+  src_ip           String?  @db.VarChar(45)
+  query_template   String?  @db.Text
+  decision         String   @db.VarChar(50)
+  suspicion_score  Int      @default(0)
+  rule_hits        String?  @db.Text
+  endpoint         String?  @db.VarChar(255)
+
+  @@map("Security_Event")
+}
