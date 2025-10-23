@@ -1,0 +1,47 @@
+{
+  "projectRepo": "https://github.com/Persona5-Joker/SQLock",
+  "team": [
+    {
+      "name": "Satyam Garg",
+      "role": "Lead",
+      "img": "/favicon.ico",
+      "linkedin": "https://www.linkedin.com/in/satyam-garg-123456/"
+    },
+    {
+      "name": "Danielle Bryan",
+      "role": "Member",
+      "img": "/favicon.ico",
+      "linkedin": "https://www.linkedin.com/in/danielle-bryan/"
+    },
+    {
+      "name": "David Wu",
+      "role": "Member",
+      "img": "/favicon.ico",
+      "linkedin": "https://www.linkedin.com/in/david-wu/"
+    },
+    {
+      "name": "Vinay Nair",
+      "role": "Member",
+      "img": "/favicon.ico",
+      "linkedin": "https://www.linkedin.com/in/vinay-nair/"
+    },
+    {
+      "name": "Noly Sia",
+      "role": "Member",
+      "img": "/favicon.ico",
+      "linkedin": "https://www.linkedin.com/in/noly-sia/"
+    },
+    {
+      "name": "Faizan-Ali Lalani",
+      "role": "Member",
+      "img": "/favicon.ico",
+      "linkedin": "https://www.linkedin.com/in/faizan-ali-lalani/"
+    },
+    {
+      "name": "Caiyun (Katie) Huang",
+      "role": "Member",
+      "img": "/favicon.ico",
+      "linkedin": "https://www.linkedin.com/in/katie-huang/"
+    }
+  ]
+}

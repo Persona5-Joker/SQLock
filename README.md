@@ -89,6 +89,27 @@ Bash
 python main.py
 ```
 
+### Run Instructions (Node.js / Next.js)
+
+This repository contains a Next.js (T3) application. To run the web demo locally:
+
+```bash
+cd sqlock
+npm install
+cp .env.example .env
+# Edit .env to point DATABASE_URL to your MySQL instance
+npx prisma migrate deploy
+npm run dev
+```
+
+Open the demo pages in your browser:
+
+- Input page: http://localhost:3000/input
+- Logs page: http://localhost:3000/logs
+- Flags page: http://localhost:3000/flags
+
+Credits: CS4389 project team
+
 ## 🧩 Project Structure
 
 A simple overview of folders/files can help others navigate your code:
