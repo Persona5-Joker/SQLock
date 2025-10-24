@@ -126,7 +126,7 @@ SQLock/
 
 ## 🧠 Technologies Used
 
-- **Languages:** Python, SQL, HTML (for web interface)
+- **Languages:** Python, SQL, TypeScript, Tailwind CSS, Next.js
     
 - **Database:** MySQL
     
@@ -141,20 +141,6 @@ SQLock/
     - HeidiSQL (for database management)
         
 
-## 🧪 Running Tests
-
-_Test instructions will be added here._
-
-Bash
-
-```
-# Example
-pytest
-```
-
-## 📄 License
-
-This project is licensed under the MIT License. (A `LICENSE` file will be added to the repository).
 
 ## 👤 Author / Maintainers
 
@@ -178,9 +164,3 @@ This project is maintained by the following group members:
 ## 🌟 Acknowledgments
 
 - This project is for the CS4389 Data and Applications Security course at The University of Texas at Dallas - Richardson.
-
-## 📚 References
-
-1. Smith, J. et al. *Deep Learning for Image Segmentation*, IEEE, 2020.  
-2. Johnson, A. *A Novel Graph-Based Clustering Algorithm*, arXiv:2103.04567.  
-3. Dataset: [CIFAR-10](https://www.cs.toronto.edu/~kriz/cifar.html)
