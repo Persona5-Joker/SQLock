@@ -5,6 +5,7 @@ import { type Metadata } from "next";
 import { Geist } from "next/font/google";
 
 import { TRPCReactProvider } from "~/trpc/react";
+import SplashIntro from "~/components/SplashIntro";
 import teamData from "~/data/team.json";
 
 type TeamMember = { name: string; role?: string; linkedin?: string; img?: string };
@@ -14,7 +15,7 @@ const _teamData = teamData as TeamData;
 export const metadata: Metadata = {
   title: "SQLock",
   description: "SQLock - SQLi detection demo",
-  icons: [{ rel: "icon", url: "/favicon.ico" }],
+  icons: [{ rel: "icon", url: "/SQLockLogo2.png" }],
 };
 
 const geist = Geist({
@@ -29,6 +30,7 @@ export default function RootLayout({
     <html lang="en" className={`${geist.variable}`}>
       <body className="bg-gray-50 text-gray-900 min-h-screen">
         <TRPCReactProvider>
+          <SplashIntro />
           <nav className="bg-slate-900 text-white px-6 py-3">
             <div className="max-w-6xl mx-auto flex items-center">
               <div className="flex-shrink-0">
