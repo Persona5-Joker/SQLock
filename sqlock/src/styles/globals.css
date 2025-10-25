@@ -19,7 +19,8 @@
 
 html.dark {
   --app-bg: #030416; /* deep navy */
-  --app-text: #e6eef8; /* pale text */
+  /* stronger, lighter text color for improved contrast in dark mode */
+  --app-text: #f5fbff; /* very pale blue-white for better readability */
   --nav-bg: #071024;
   --nav-text: #e6eef8;
   --card-bg: #0b1a2b; /* slightly lighter than page bg so cards pop */
