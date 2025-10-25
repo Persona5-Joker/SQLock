@@ -46,7 +46,7 @@ export default async function Home() {
                   href={m.linkedin}
                   target="_blank"
                   rel="noreferrer"
-                  className="flex items-center gap-4 rounded-md border p-4 bg-white hover:shadow-lg transition no-underline"
+                  className="flex items-center gap-4 rounded-md border p-4 team-card hover:shadow-lg transition no-underline"
                 >
                   <div className="w-16 h-16 rounded-full overflow-hidden bg-gray-100 flex items-center justify-center">
                     <Image src={m.img} alt={m.name} width={64} height={64} />
