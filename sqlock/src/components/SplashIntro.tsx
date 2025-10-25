@@ -19,10 +19,12 @@ const CONFIG = {
 
   // pulse / breathing
   pulse: {
-    minScale: 1.0,
-    maxScale: 1.05,
-    durationSec: 2.8, // full cycle
-    easing: "cubic-bezier(0.4,0,0.2,1)",
+    // aggressive pulse: shrink down and grow much larger
+    minScale: 0.5,
+    maxScale: 0.6,
+    durationSec: 5.0, // faster, more punchy cycle
+    // snappier easing for a more pronounced in/out
+    easing: "cubic-bezier(0.2,0.2,0.2,1)",
   },
 
   // fade/hide
@@ -37,8 +39,9 @@ const CONFIG = {
   // ambient glow
   glow: {
     color: "rgba(96,163,255,", // base color, append opacity -> soft blue
-    opacity: 0.52,
-    midOpacity: 0.08,
+    // stronger ambient glow to match the aggressive scaling
+    opacity: 0.72,
+    midOpacity: 0.14,
     blurPx: 56,
     sizeVW: 56,
     maxPx: 820,
