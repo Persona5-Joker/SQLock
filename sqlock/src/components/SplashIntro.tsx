@@ -98,6 +98,10 @@ export default function SplashIntro() {
     ? `brightness(1) blur(0px) drop-shadow(0 28px 80px ${visibleDrop})`
     : `brightness(${CONFIG.hideBrightness}) blur(${CONFIG.hideBlurPx}px) drop-shadow(0 12px 40px ${hiddenDrop})`;
 
+  // precompute glow colors for ring/border
+  const glowFull = `${CONFIG.glow.color}${CONFIG.glow.opacity})`;
+  const glowMid = `${CONFIG.glow.color}${CONFIG.glow.midOpacity})`;
+
   return (
     <div
       role="button"
@@ -144,10 +148,47 @@ export default function SplashIntro() {
           willChange: "filter, transform, opacity",
         }}
       >
-        <div className="relative w-full h-full">
-          {/* plain img for debugging; keeps same object-fit behavior */}
-          <img src={CONFIG.logoSrc} alt="SQLock" style={{ width: "100%", height: "100%", objectFit: "contain" as const }} />
-        </div>
+          <div className="relative w-full h-full">
+            {/* ring/border that matches ambient glow — behind the logo to smooth the glow edge */}
+            <div
+              aria-hidden
+              style={{
+                position: "absolute",
+                inset: 0,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                pointerEvents: "none",
+              }}
+            >
+              <div
+                style={{
+                  // make the ring larger than the image so it frames outside the logo
+                  width: "100%",
+                  height: "100%",
+                  // slightly more rounded corners to follow the image frame
+                  borderRadius: 180,
+                  // stronger, slightly wider blur to blend with ambient glow
+                  boxShadow: `0 0 ${Math.max(12, Math.round(CONFIG.glow.blurPx * 0.9))}px ${glowFull}`,
+                  // slightly thicker border so it reads as an external frame
+                  border: `3px solid ${glowMid}`,
+                  transition: "box-shadow 300ms ease, transform 300ms ease",
+                  willChange: "box-shadow, transform",
+                  // keep it centered and let it overflow the image bounds
+                  transform: "translateZ(0)",
+                }}
+              />
+            </div>
+
+            {/* clipped, rounded image so corners are removed and match the ring/frame */}
+            <div style={{ width: "100%", height: "100%", borderRadius: 180, overflow: "hidden", position: "relative" }}>
+              <img
+                src={CONFIG.logoSrc}
+                alt="SQLock"
+                style={{ width: "100%", height: "100%", objectFit: "contain" as const, display: "block" }}
+              />
+            </div>
+          </div>
       </div>
 
       {/* hint text */}
