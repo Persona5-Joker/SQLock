@@ -16,7 +16,7 @@ export default async function FlagsPage() {
       <h1 className="text-2xl font-bold mb-4 text-red-600">Flagged Attempts</h1>
       <table className="table-auto w-full border text-sm">
         <thead>
-          <tr className="bg-gray-200">
+          <tr className="bg-gray-700">
             <th>Timestamp</th>
             <th>Decision</th>
             <th>Score</th>
