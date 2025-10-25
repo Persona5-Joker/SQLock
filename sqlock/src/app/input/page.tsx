@@ -139,7 +139,7 @@ export default function InputPage() {
                     setRunning(false);
                   }
                 }}
-                className="px-3 py-2 rounded border bg-gray-100 hover:bg-gray-200"
+                className="px-3 py-2 rounded border bg-gray-500 hover:bg-gray-200"
               >
                 Run sample
               </button>

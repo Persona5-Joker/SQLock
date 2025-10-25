@@ -51,7 +51,7 @@ export default function LogsPage() {
         <div className="flex items-center gap-2">
           <button
             onClick={() => void refetch()}
-            className="px-3 py-1 rounded bg-blue-600 text-white text-sm hover:bg-blue-700"
+            className="px-3 py-1 rounded bg-blue-600 text-white text-sm hover:bg-blue-800"
           >
             Refresh
           </button>
@@ -64,7 +64,7 @@ export default function LogsPage() {
         <div className="overflow-x-auto bg-white rounded border">
           <table className="table-auto w-full text-sm">
             <thead>
-              <tr className="bg-gray-100 text-left">
+              <tr className="bg-gray-500 text-left">
                 <th className="px-4 py-2">Time (UTC)</th>
                 <th className="px-4 py-2">Decision</th>
                 <th className="px-4 py-2">Score</th>
@@ -73,7 +73,7 @@ export default function LogsPage() {
             </thead>
             <tbody>
               {rows.map((l) => (
-                <tr key={l.id} className="border-t hover:bg-gray-50">
+                <tr key={l.id} className="border-t hover:bg-gray-600">
                   <td className="px-4 py-2 align-top">
                     {new Date(l.ts_utc).toLocaleString()}
                   </td>
