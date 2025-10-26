@@ -1,57 +1,35 @@
-type LogRow = {
-  id: number;
-  ts_utc: string | Date;
-  decision: string;
-  suspicion_score: number;
-  query_template?: string | null;
-};
+import { DataTable } from "~/components/data-table";
+import { securityEventColumns } from "~/components/security-event-columns";
+import { getFlaggedSecurityEvents, type SecurityEventRow } from "~/server/security-events";
+import type { SecurityEventLog } from "~/types/security-event-log";
 
-// When the real server/trpc is not present, show a small set of example flagged logs.
-const mockFlagged: LogRow[] = [
-  {
-    id: 101,
-    ts_utc: new Date().toISOString(),
-    decision: "block",
-    suspicion_score: 95,
-    query_template: "DROP TABLE users; --",
-  },
-  {
-    id: 102,
-    ts_utc: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
-    decision: "challenge",
-    suspicion_score: 60,
-    query_template: "SELECT * FROM users WHERE username = 'a' OR 1=1 --';",
-  },
-];
+function formatRows(rows: readonly SecurityEventRow[]): SecurityEventLog[] {
+  return rows.map((row) => ({
+    id: row.id,
+    ts_utc: row.ts_utc instanceof Date ? row.ts_utc : new Date(row.ts_utc),
+    decision: row.decision,
+    suspicion_score: row.suspicion_score,
+    query_template: row.query_template ?? null,
+  }));
+}
 
-export default function FlagsPage() {
-  const logs: LogRow[] = mockFlagged;
+export default async function FlagsPage() {
+  let logs: SecurityEventLog[] = [];
+  try {
+    logs = formatRows(await getFlaggedSecurityEvents(100));
+  } catch (err) {
+    console.error("Failed to fetch flagged events", err);
+  }
 
   return (
     <div className="max-w-5xl mx-auto">
       <h1 className="text-2xl font-bold mb-4 text-red-600">Flagged Attempts</h1>
-      <table className="table-auto w-full border text-sm">
-        <thead>
-          <tr className="bg-gray-700">
-            <th>Timestamp</th>
-            <th>Decision</th>
-            <th>Score</th>
-            <th>Query</th>
-          </tr>
-        </thead>
-        <tbody>
-          {logs.map((l) => (
-            <tr key={l.id} className="border-t">
-              <td>{new Date(l.ts_utc).toLocaleString()}</td>
-              <td className={l.decision === "block" ? "text-red-600" : "text-yellow-600"}>
-                {l.decision}
-              </td>
-              <td>{l.suspicion_score}</td>
-              <td>{String(l.query_template ?? "")}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <DataTable
+        columns={securityEventColumns}
+        data={logs}
+        emptyMessage="No flagged attempts found."
+        className="bg-white"
+      />
     </div>
   );
 }
