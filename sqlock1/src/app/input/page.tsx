@@ -35,7 +35,7 @@ export default function InputPage() {
   const [lastQuery, setLastQuery] = useState<string>("");
   const [running, setRunning] = useState(false);
 
-  // local detector to replace removed server/trpc
+  // Simple local detector to replace removed server/trpc
   function detectQuery(q: string): DetectionResult {
     const s = (q || "").toLowerCase();
     if (!s.trim()) return {};
@@ -63,11 +63,12 @@ export default function InputPage() {
       const lower = query.trim().toLowerCase();
       if (lower.startsWith("select") && lower.includes(" from ")) {
         try {
-          // simulate runSelect
+          // simulate live DB run (we already have simulateDbResponse)
           const res = simulateDbResponse(query) as ServerResult | { type: string; message?: string };
           if ((res as ServerResult).columns) setServerRows(res as ServerResult);
           else setServerRows(undefined);
         } catch (err) {
+          // Narrow error safely
           console.error("runSelect failed", err);
           if (err instanceof Error) setServerError(err.message);
           else setServerError(String(err));
@@ -167,6 +168,12 @@ export default function InputPage() {
               ) : (
                 <div className="text-xs text-gray-600 bg-gray-100 px-2 py-1 rounded">Simulated</div>
               )}
+            </div>
+
+            {/* show detection result */}
+            <div className="mb-3">
+              <div className="text-sm">Detector decision: <span className="font-medium">{result.decision ?? "-"}</span></div>
+              <div className="text-xs text-gray-500">Score: {result.score ?? "-"}</div>
             </div>
 
             {!lastQuery && <div className="text-sm text-gray-500">Run a query to see simulated output here.</div>}

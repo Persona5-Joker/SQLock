@@ -6,6 +6,7 @@ type LogRow = {
   query_template?: string | null;
 };
 
+// When the real server/trpc is not present, show a small set of example flagged logs.
 const mockFlagged: LogRow[] = [
   {
     id: 101,
