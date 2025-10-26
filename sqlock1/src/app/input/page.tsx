@@ -5,6 +5,7 @@ import type { ColumnDef } from "@tanstack/react-table";
 import { ArrowDown, ArrowUp, ArrowUpDown } from "lucide-react";
 
 import { Button } from "~/components/ui/button";
+import { Textarea } from "~/components/ui/textarea";
 import { DataTable } from "~/components/data-table";
 
 type DetectionResult = { decision?: string; score?: number };
@@ -108,6 +109,19 @@ export default function InputPage() {
     return { columns: parsed.columns, rows: parsed.rows };
   }
 
+  async function logSecurityEvent(decision: string, score: number, queryText: string): Promise<void> {
+    try {
+      await fetch("/api/log", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ decision, score, query: queryText }),
+        cache: "no-store",
+      });
+    } catch (err) {
+      console.error("Failed to log security event", err);
+    }
+  }
+
   const runPipeline = async (sql: string) => {
     const trimmed = sql.trim();
     if (!trimmed) return;
@@ -121,6 +135,13 @@ export default function InputPage() {
       const detection = detectQuery(trimmed);
       setResult(detection);
       setLastQuery(trimmed);
+
+      // Log the security event to the database
+      await logSecurityEvent(
+        detection.decision ?? "unknown",
+        detection.score ?? 0,
+        trimmed
+      );
 
       const lower = trimmed.toLowerCase();
       const isSelect = lower.startsWith("select") && lower.includes(" from ");
@@ -210,46 +231,45 @@ export default function InputPage() {
 
   return (
     <div className="max-w-6xl mx-auto">
-      <h1 className="text-2xl font-bold mb-4">SQLock – Input Simulation</h1>
+      <h1 className="text-2xl font-bold mb-4 text-foreground">SQLock – Input Simulation</h1>
 
       <div className="space-y-6">
         <div>
           <form onSubmit={handleSubmit}>
-            <label className="block mb-2 font-medium">SQL Input</label>
-            <textarea
+            <label className="block mb-2 font-medium text-foreground">SQL Input</label>
+            <Textarea
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              className="w-full border rounded p-2 mb-2 h-40"
+              className="mb-2 h-40"
               placeholder="Enter SQL command"
             />
 
             <div className="flex items-center gap-3">
-              <button
+              <Button
                 type="submit"
                 disabled={running}
-                className="bg-blue-600 text-white rounded px-4 py-2 disabled:opacity-60"
               >
                 {running ? "Running..." : "Run"}
-              </button>
+              </Button>
 
-              <button
+              <Button
                 type="button"
+                variant="outline"
                 onClick={() => {
                   setQuery("");
                 }}
-                className="px-3 py-2 rounded border"
               >
                 Clear
-              </button>
+              </Button>
 
-              <button
+              <Button
                 type="button"
+                variant="secondary"
                 onClick={() => void runSample()}
                 disabled={running}
-                className="px-3 py-2 rounded border bg-gray-500 hover:bg-gray-200 disabled:opacity-60"
               >
                 Run sample
-              </button>
+              </Button>
             </div>
 
             {/* Decision display intentionally removed to keep the input UI compact */}
@@ -257,32 +277,32 @@ export default function InputPage() {
         </div>
 
         <div>
-          <div className="p-4 border rounded bg-white min-h-[200px]">
+          <div className="p-4 border border-border rounded-lg bg-card min-h-[200px] shadow-sm">
             <div className="flex items-center justify-between mb-2">
-              <div className="font-semibold">Query Output</div>
+              <div className="font-semibold text-foreground">Query Output</div>
               {serverRows ? (
-                <div className="text-xs text-green-700 bg-green-100 px-2 py-1 rounded">Live</div>
+                <div className="text-xs font-medium text-primary bg-primary/10 px-2 py-1 rounded">Live</div>
               ) : (
-                <div className="text-xs text-gray-600 bg-gray-100 px-2 py-1 rounded">Idle</div>
+                <div className="text-xs font-medium text-muted-foreground bg-muted px-2 py-1 rounded">Idle</div>
               )}
             </div>
 
             {/* show detection result */}
             <div className="mb-3">
-              <div className="text-sm">Detector decision: <span className="font-medium">{result.decision ?? "-"}</span></div>
-              <div className="text-xs text-gray-500">Score: {result.score ?? "-"}</div>
+              <div className="text-sm text-foreground">Detector decision: <span className="font-medium text-accent-foreground">{result.decision ?? "-"}</span></div>
+              <div className="text-xs text-muted-foreground">Score: {result.score ?? "-"}</div>
             </div>
 
             {!lastQuery && infoMessage && (
-              <div className="text-sm text-gray-500">{infoMessage}</div>
+              <div className="text-sm text-muted-foreground">{infoMessage}</div>
             )}
 
             {serverError && (
-              <div className="mt-2 p-2 border rounded bg-red-50 text-red-700 text-sm">Server error: {serverError}</div>
+              <div className="mt-2 p-2 border border-destructive/50 rounded bg-destructive/10 text-destructive text-sm">Server error: {serverError}</div>
             )}
 
             {lastQuery && infoMessage && !serverRows && (
-              <div className="text-sm text-gray-700">{infoMessage}</div>
+              <div className="text-sm text-muted-foreground">{infoMessage}</div>
             )}
 
             <div className="mt-2">

@@ -76,7 +76,7 @@ export function DataTable<TData>({ columns, data, emptyMessage = "No results.", 
             onChange={(e) => {
               table.setGlobalFilter(e.target.value);
             }}
-            className="border rounded px-3 py-1.5 text-sm w-64"
+            className="border border-input rounded-md px-3 py-1.5 text-sm w-64 bg-background text-foreground shadow-xs focus:outline-none focus:ring-2 focus:ring-ring"
           />
         </div>
 
@@ -96,7 +96,7 @@ export function DataTable<TData>({ columns, data, emptyMessage = "No results.", 
         </div>
       </div>
 
-      <div className="overflow-hidden rounded-md border">
+      <div className="overflow-hidden rounded-md border border-border shadow-sm">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
@@ -150,14 +150,14 @@ export function DataTable<TData>({ columns, data, emptyMessage = "No results.", 
           </Button>
         </div>
 
-        <div className="text-sm">
+        <div className="text-sm text-foreground">
           Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}
         </div>
 
         <div className="flex items-center gap-2">
-          <label className="text-sm">Rows per page:</label>
+          <label className="text-sm text-foreground">Rows per page:</label>
           <select
-            className="border rounded px-2 py-1 text-sm"
+            className="border border-input rounded-md px-2 py-1 text-sm bg-background text-foreground shadow-xs focus:outline-none focus:ring-2 focus:ring-ring"
             value={table.getState().pagination.pageSize}
             onChange={(e) => table.setPageSize(Number(e.target.value))}
           >
