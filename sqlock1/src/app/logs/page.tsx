@@ -27,17 +27,16 @@ export default async function LogsPage() {
   return (
     <div className="max-w-6xl mx-auto">
       <div className="flex items-center justify-between mb-4">
-        <h1 className="text-2xl font-bold">System Logs</h1>
+        <h1 className="text-2xl font-bold text-foreground">System Logs</h1>
       </div>
 
       <DataTable
         columns={securityEventColumns}
         data={rows}
         emptyMessage="No log entries found."
-        className="bg-white"
       />
 
-      {loadError && <div className="mt-3 text-sm text-yellow-600">{loadError}</div>}
+      {loadError && <div className="mt-3 text-sm text-destructive bg-destructive/10 border border-destructive/50 rounded-md p-3">{loadError}</div>}
     </div>
   );
 }

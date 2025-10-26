@@ -23,12 +23,11 @@ export default async function FlagsPage() {
 
   return (
     <div className="max-w-5xl mx-auto">
-      <h1 className="text-2xl font-bold mb-4 text-red-600">Flagged Attempts</h1>
+      <h1 className="text-2xl font-bold mb-4 text-destructive">Flagged Attempts</h1>
       <DataTable
         columns={securityEventColumns}
         data={logs}
         emptyMessage="No flagged attempts found."
-        className="bg-white"
       />
     </div>
   );

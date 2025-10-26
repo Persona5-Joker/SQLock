@@ -2,12 +2,10 @@
 
 import React, { useEffect, useState } from "react";
 import Image from "next/image";
+import { useTheme } from "next-themes";
 
 // ---------- Tweakable configuration (change these values to tweak the splash) ----------
 const CONFIG = {
-  // overlay
-  backgroundColorClass: "bg-[#010b1d]",
-
   // logo
   logoSrc: "/SQLockLogo1.png",
   logoWidthVW: 72, // vw
@@ -17,42 +15,39 @@ const CONFIG = {
 
   // pulse / breathing
   pulse: {
-    // aggressive pulse: shrink down and grow much larger
     minScale: 0.5,
-    maxScale: 0.6,
-    durationSec: 5.0, // faster, more punchy cycle
-    // snappier easing for a more pronounced in/out
+    maxScale: 0.8,
+    durationSec: 5.0,
     easing: "cubic-bezier(0.2,0.2,0.2,1)",
   },
 
   // fade/hide
   fadeMs: 1400,
   fadeEasing: "cubic-bezier(0.4,0,0.2,1)",
-  endScale: 0.9,
   hideBrightness: 0.78,
   hideBlurPx: 6,
-  // hex for background so we can transition to transparent
-  backgroundHex: "#010b1d",
 
   // ambient glow
   glow: {
-    color: "rgba(96,163,255,", // base color, append opacity -> soft blue
-    // stronger ambient glow to match the aggressive scaling
     opacity: 0.72,
     midOpacity: 0.14,
     blurPx: 56,
     sizeVW: 56,
     maxPx: 820,
   },
-
-  // hint text
-  hintDurationMs: 500,
 };
 
 export default function SplashIntro() {
   const [visible, setVisible] = useState(true);
   const [removed, setRemoved] = useState(false);
   const [pulseOn, setPulseOn] = useState(true);
+  const [mounted, setMounted] = useState(false);
+  const { resolvedTheme } = useTheme();
+
+  // Wait for theme to be mounted
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Respect prefers-reduced-motion: skip animations and remove immediately
   useEffect(() => {
@@ -82,23 +77,20 @@ export default function SplashIntro() {
 
   if (removed) return null;
 
-  const containerBase = `fixed inset-0 z-[9999] flex items-center justify-center ${CONFIG.backgroundColorClass}`;
-  // prefer a pure fade to transparent: don't scale the container during hide
+  // Use theme-aware colors
+  const isDark = mounted && resolvedTheme === "dark";
+  const glowColor = isDark ? "rgba(0, 212, 255," : "rgba(96, 163, 255,"; // cyan for dark, blue for light
+  const glowFull = `${glowColor}${CONFIG.glow.opacity})`;
+  const glowMid = `${glowColor}${CONFIG.glow.midOpacity})`;
+  const dropShadowVisible = `${glowColor}0.12)`;
+  const dropShadowHidden = `${glowColor}0.06)`;
+
   const containerState = visible ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none";
-
-  const imgWrapperClass = `relative w-[${CONFIG.logoWidthVW}vw] max-w-[${CONFIG.logoMaxPx}px] h-[${CONFIG.logoHeightVH}vh] max-h-[${CONFIG.logoMaxHeightPx}px] flex items-center justify-center`;
-
   const pulseAnimation = pulseOn ? `pulseSlow ${CONFIG.pulse.durationSec}s ${CONFIG.pulse.easing} infinite` : "none";
-  // add a subtle blue drop-shadow to the visible state to enhance the glow behind the logo
-  const visibleDrop = `${CONFIG.glow.color}0.12)`; // rgba(96,163,255,0.12)
-  const hiddenDrop = `${CONFIG.glow.color}0.06)`; // weaker when hiding
+  
   const filterStyle = visible
-    ? `brightness(1) blur(0px) drop-shadow(0 28px 80px ${visibleDrop})`
-    : `brightness(${CONFIG.hideBrightness}) blur(${CONFIG.hideBlurPx}px) drop-shadow(0 12px 40px ${hiddenDrop})`;
-
-  // precompute glow colors for ring/border
-  const glowFull = `${CONFIG.glow.color}${CONFIG.glow.opacity})`;
-  const glowMid = `${CONFIG.glow.color}${CONFIG.glow.midOpacity})`;
+    ? `brightness(1) blur(0px) drop-shadow(0 28px 80px ${dropShadowVisible})`
+    : `brightness(${CONFIG.hideBrightness}) blur(${CONFIG.hideBlurPx}px) drop-shadow(0 12px 40px ${dropShadowHidden})`;
 
   return (
     <div
@@ -108,12 +100,13 @@ export default function SplashIntro() {
       onClick={dismiss}
       onKeyDown={onKeyDown}
       onTransitionEnd={onTransitionEnd}
-      className={`${containerBase} ${containerState} transition-opacity`}
+      className={`fixed inset-0 z-[9999] flex items-center justify-center ${containerState} transition-opacity`}
       style={{
         transitionDuration: `${CONFIG.fadeMs}ms`,
         transitionTimingFunction: CONFIG.fadeEasing,
-        transitionProperty: "opacity, background-color",
-        backgroundColor: visible ? CONFIG.backgroundHex : "transparent",
+        transitionProperty: "opacity",
+        backdropFilter: visible ? "blur(20px)" : "blur(0px)",
+        backgroundColor: visible ? "rgba(0, 0, 0, 0.5)" : "transparent",
       }}
     >
       {/* ambient glow */}
@@ -125,7 +118,7 @@ export default function SplashIntro() {
             height: `${CONFIG.glow.sizeVW}vw`,
             maxHeight: `${CONFIG.glow.maxPx}px`,
             borderRadius: "50%",
-            background: `radial-gradient(circle, ${CONFIG.glow.color}${CONFIG.glow.opacity} 0%, ${CONFIG.glow.color}${CONFIG.glow.midOpacity} 40%, transparent 60%)`,
+            background: `radial-gradient(circle, ${glowFull} 0%, ${glowMid} 40%, transparent 60%)`,
             filter: `blur(${CONFIG.glow.blurPx}px)`,
             transform: "translateZ(0)",
             opacity: pulseOn ? 1 : 0,
@@ -137,8 +130,12 @@ export default function SplashIntro() {
 
       {/* logo with pulse */}
       <div
-        className={imgWrapperClass}
+        className="relative flex items-center justify-center"
         style={{
+          width: `${CONFIG.logoWidthVW}vw`,
+          maxWidth: `${CONFIG.logoMaxPx}px`,
+          height: `${CONFIG.logoHeightVH}vh`,
+          maxHeight: `${CONFIG.logoMaxHeightPx}px`,
           animation: pulseAnimation,
           transformOrigin: "center",
           filter: filterStyle,
@@ -193,8 +190,10 @@ export default function SplashIntro() {
       </div>
 
       {/* hint text */}
-      <div className="absolute bottom-12 text-center w-full text-sm text-slate-300 opacity-80 select-none pointer-events-none">
-        <div className={visible ? "opacity-100 transition-opacity duration-500" : "opacity-0 transition-opacity duration-500"}>
+      <div className="absolute bottom-12 text-center w-full text-sm text-muted-foreground select-none pointer-events-none">
+        <div
+          className={visible ? "opacity-100 transition-opacity duration-500" : "opacity-0 transition-opacity duration-500"}
+        >
           Click or tap to enter
         </div>
       </div>

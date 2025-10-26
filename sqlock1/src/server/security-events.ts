@@ -32,3 +32,15 @@ export async function getFlaggedSecurityEvents(limit = 50): Promise<SecurityEven
   const rows = await query<SecurityEventRow[]>(sql, [limit]);
   return rows;
 }
+
+export async function logSecurityEvent(
+  decision: string,
+  suspicionScore: number,
+  queryTemplate: string,
+): Promise<void> {
+  const sql = `
+    INSERT INTO Security_Event (decision, suspicion_score, query_template)
+    VALUES (?, ?, ?)
+  `;
+  await query(sql, [decision, suspicionScore, queryTemplate]);
+}
