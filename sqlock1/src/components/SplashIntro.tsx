@@ -1,9 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-// Use plain <img> for quick debugging. If this shows the logo in the browser
-// then the issue is likely related to Next/Image optimization. Revert to
-// next/image after debugging if desired.
+import Image from "next/image";
 
 // ---------- Tweakable configuration (change these values to tweak the splash) ----------
 const CONFIG = {
@@ -182,10 +180,13 @@ export default function SplashIntro() {
 
             {/* clipped, rounded image so corners are removed and match the ring/frame */}
             <div style={{ width: "100%", height: "100%", borderRadius: 180, overflow: "hidden", position: "relative" }}>
-              <img
+              <Image
                 src={CONFIG.logoSrc}
                 alt="SQLock"
-                style={{ width: "100%", height: "100%", objectFit: "contain" as const, display: "block" }}
+                fill
+                sizes={`(max-width: 768px) ${CONFIG.logoWidthVW}vw, ${CONFIG.logoMaxPx}px`}
+                priority
+                style={{ objectFit: "contain" }}
               />
             </div>
           </div>
