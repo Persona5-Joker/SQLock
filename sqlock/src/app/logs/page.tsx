@@ -1,7 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
-import { api } from "~/trpc/react";
+import { useMemo, useState } from "react";
 
 type LogRow = {
   id: number;
@@ -36,13 +35,19 @@ const mockData: LogRow[] = [
 ];
 
 export default function LogsPage() {
-  const query = api.logger.getAll.useQuery(undefined, { retry: false });
-  const { data, isLoading, error, refetch } = query;
+  const [data, setData] = useState<LogRow[] | undefined>(mockData);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const rows: LogRow[] = useMemo(() => {
-    if (error || !data) return mockData;
-    return data as LogRow[];
-  }, [data, error]);
+  // refetch will just re-load the mock data for now
+  const refetch = async () => {
+    setIsLoading(true);
+    // simulate small delay
+    await new Promise((r) => setTimeout(r, 200));
+    setData(mockData);
+    setIsLoading(false);
+  };
+
+  const rows: LogRow[] = useMemo(() => (data ?? mockData), [data]);
 
   return (
     <div className="max-w-6xl mx-auto">
@@ -98,13 +103,6 @@ export default function LogsPage() {
               ))}
             </tbody>
           </table>
-        </div>
-      )}
-
-      {error && (
-        <div className="mt-3 text-sm text-red-600">
-          Error loading logs from server — showing example data. ({" "}
-          {String(error?.message ?? "unknown")})
         </div>
       )}
     </div>

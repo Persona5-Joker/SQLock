@@ -1,5 +1,3 @@
-import { api } from "~/trpc/server";
-
 type LogRow = {
   id: number;
   ts_utc: string | Date;
@@ -8,8 +6,25 @@ type LogRow = {
   query_template?: string | null;
 };
 
-export default async function FlagsPage() {
-  const logs = (await api.logger.getFlagged()) as LogRow[];
+const mockFlagged: LogRow[] = [
+  {
+    id: 101,
+    ts_utc: new Date().toISOString(),
+    decision: "block",
+    suspicion_score: 95,
+    query_template: "DROP TABLE users; --",
+  },
+  {
+    id: 102,
+    ts_utc: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
+    decision: "challenge",
+    suspicion_score: 60,
+    query_template: "SELECT * FROM users WHERE username = 'a' OR 1=1 --';",
+  },
+];
+
+export default function FlagsPage() {
+  const logs: LogRow[] = mockFlagged;
 
   return (
     <div className="max-w-5xl mx-auto">

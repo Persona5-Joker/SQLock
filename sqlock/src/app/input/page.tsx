@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { api } from "~/trpc/react";
 
 type DetectionResult = { decision?: string; score?: number };
 
@@ -36,8 +35,16 @@ export default function InputPage() {
   const [lastQuery, setLastQuery] = useState<string>("");
   const [running, setRunning] = useState(false);
 
-  const mutation = api.logger.logQuery.useMutation();
-  const runSelect = api.logger.runSelect.useMutation();
+  // local detector to replace removed server/trpc
+  function detectQuery(q: string): DetectionResult {
+    const s = (q || "").toLowerCase();
+    if (!s.trim()) return {};
+    if (s.includes("drop") || s.includes("union") || s.includes("or 1=1") || s.includes("--")) {
+      return { decision: "block", score: 90 };
+    }
+    if (s.includes("or") && s.includes("=")) return { decision: "challenge", score: 55 };
+    return { decision: "allow", score: 0 };
+  }
 
   const output = useMemo(() => simulateDbResponse(lastQuery), [lastQuery]);
 
@@ -49,16 +56,17 @@ export default function InputPage() {
     if (!query.trim()) return;
     setRunning(true);
     try {
-      const res = await mutation.mutateAsync({ query });
+      const res = detectQuery(query);
       setResult(res);
       setLastQuery(query);
       // if select, try running it against DB
       const lower = query.trim().toLowerCase();
       if (lower.startsWith("select") && lower.includes(" from ")) {
         try {
-          const res = await runSelect.mutateAsync({ query });
-          // server returns { columns, rows }
-          setServerRows(res as ServerResult);
+          // simulate runSelect
+          const res = simulateDbResponse(query) as ServerResult | { type: string; message?: string };
+          if ((res as ServerResult).columns) setServerRows(res as ServerResult);
+          else setServerRows(undefined);
         } catch (err) {
           console.error("runSelect failed", err);
           if (err instanceof Error) setServerError(err.message);
@@ -121,12 +129,13 @@ export default function InputPage() {
                   const sample = "SELECT employee_id, first_name, last_name, email FROM employee_info LIMIT 10";
                   setRunning(true);
                   try {
-                    const res = await mutation.mutateAsync({ query: sample });
+                    const res = detectQuery(sample);
                     setResult(res);
                     setLastQuery(sample);
                     try {
-                const res = await runSelect.mutateAsync({ query: sample });
-                setServerRows(res as ServerResult);
+                      const res = simulateDbResponse(sample) as ServerResult | { type: string; message?: string };
+                      if ((res as ServerResult).columns) setServerRows(res as ServerResult);
+                      else setServerRows(undefined);
                       setServerError(undefined);
                     } catch (err) {
                       console.error("runSelect failed", err);
