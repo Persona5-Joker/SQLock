@@ -4,142 +4,220 @@
 
 ## 🚀 Overview
 
-SQLock is a security system designed to detect and prevent SQL injection (SQLi) attacks111. This project was created for the CS4389 Data and Applications Security course.
+SQLock is a web-based security demonstration system designed to detect and prevent SQL injection (SQLi) attacks. This project was created for the CS4389 Data and Applications Security course at The University of Texas at Dallas.
 
-The primary goal is to create a secure database solution for real-world applications by building a tool that not only blocks malicious queries but also logs them for analysis3333. The system works by analyzing user inputs at the application layer and logging suspicious activity to identify potential attack patterns.
+The primary goal is to create a teaching/proof-of-concept application that demonstrates secure database interaction patterns. The system uses a rule-based detection engine to analyze SQL queries at the application layer, logs all suspicious activity to a MySQL database, and provides a real-time dashboard for security event analysis.
 
 ## 🛠️ Features
 
-✅ SQL Injection Prevention: Actively detects and mitigates SQLi attacks.
+ **SQL Injection Detection**: Client-side rule-based detector analyzes queries for suspicious patterns before execution
 
-✅ Advanced Logging: Logs user inputs, including timestamps, user information, and the raw query string, to trace potential attacks.
+ **Advanced Logging**: Records all security events with timestamps, decision outcomes (allow/challenge/block), and suspicion scores to a MySQL database
 
-✅ Pattern Analysis: Includes tools to analyze logs to identify probable SQL injection patterns.
+ **Real-Time Dashboard**: Three-page web interface for interacting with the system:
+   - **Input Page**: Test SQL queries against the detection engine
+   - **Logs Page**: View all recorded security events
+   - **Flags Page**: Filter and analyze blocked or challenged attempts
 
-✅ Rule-Based Detection: Uses a set of detection rules to identify common SQLi payloads, such as tautologies (`or 1=1`), SQL comments (`--`, `/*`), `UNION` `SELECT` queries, and more.
+ **Safe Query Execution**: Restricted to SELECT queries on the `employee_info` table with parameterized queries to prevent actual SQL injection
+
+ **Rule-Based Detection**: Identifies common SQLi patterns including:
+   - SQL tautologies (e.g., `OR 1=1`)
+   - SQL comments (`--`, `/*`)
+   - `UNION` and `DROP` statements
+   - Suspicious operator combinations
 
 ## 📦 Installation
 
 ### Prerequisites
 
-- Python
-- MySQL 
-- A MySQL management tool (e.g., HeidiSQL )
-- ZeroTier (Maybe)
+- **Node.js** (v20 or higher recommended)
+- **MySQL** (v8.0 or higher)
+- A MySQL management tool (e.g., HeidiSQL, MySQL Workbench, or phpMyAdmin)
+- **npm** or **pnpm** package manager
 
 ### Setup Instructions
 
-1. **Clone the repo**
+1. **Clone the repository**
     
-    Bash
-    
-    ```
-    git clone https://github.com/username/SQLock.git
+    ```bash
+    git clone https://github.com/Persona5-Joker/SQLock.git
     ```
     
-2. **Go to project folder**
+2. **Navigate to project folder**
     
-    Bash
-    
-    ```
+    ```bash
     cd SQLock
     ```
     
-3. **Install Python dependencies** (Assuming a `requirements.txt` file)
+3. **Install dependencies**
     
-    Bash
-    
-    ```
-    pip install -r requirements.txt
+    ```bash
+    npm install
     ```
     
-4. **Join the ZeroTier Network**
+4. **Set up the Database**
     
-    - *this step only needs to be done if locally hosting database on separate device*
-		
-    - Install ZeroTier from the [Zerotier Download page](https://www.zerotier.com/download/).
+    - Create a MySQL database for the project (e.g., `sqlock_db`)
         
-    - Join the network using the ID: `Unique per situation`.
+    - Create a `Security_Event` table with the following schema:
         
-5. **Set up the Database**
+        ```sql
+        CREATE TABLE Security_Event (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            ts_utc TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            decision VARCHAR(50) NOT NULL,
+            suspicion_score INT NOT NULL,
+            query_template TEXT
+        );
+        ```
+        
+    - Create an `employee_info` table for testing queries (or import your own schema)
+        
+5. **Configure environment variables**
     
-    - Ensure your ZeroTier connection is active.
-        
-    - Connect to the MySQL database using your management tool with the following credentials:
-        
-        - **IP Address:** `zerotier IP address for your server`
-            
-        - **Usernames:** `Whatever you created during database creation`
-            
-        - **Password:** `Whatever you created during database creation`
-            
-    - Populate the database by running the `Employee_Info.sql` script.
-        
+    ```bash
+    cp .env.example .env
+    ```
+    
+    Edit `.env` and set your MySQL connection string:
+    
+    ```bash
+    DATABASE_URL="mysql://username:password@localhost:3306/sqlock_db"
+    ```
 
 ## ⚙️ Usage
 
-_Further instructions on running the main application will be added here._
+### Running the Application
 
-Example of how to run the main script (placeholder):
-
-Bash
-
-```
-# Run the main application
-python main.py
-```
-
-### Run Instructions (Node.js / Next.js)
-
-This repository contains a Next.js (T3) application. To run the web demo locally:
+Start the Next.js development server:
 
 ```bash
-cd sqlock
-npm install
-cp .env.example .env
-# Edit .env to point DATABASE_URL to your MySQL instance
-npx prisma migrate deploy
 npm run dev
 ```
 
-Open the demo pages in your browser:
+The application will be available at `http://localhost:3000`
 
-- Input page: http://localhost:3000/input
-- Logs page: http://localhost:3000/logs
-- Flags page: http://localhost:3000/flags
+### Application Pages
 
-Credits: CS4389 project team
+- **Home Page**: `http://localhost:3000`
+  - Project overview and team information
+  
+- **Input Page**: `http://localhost:3000/input`
+  - Test SQL queries against the detection engine
+  - See real-time detection results and suspicion scores
+  - Execute safe SELECT queries against the database
+  
+- **Logs Page**: `http://localhost:3000/logs`
+  - View all recorded security events (up to 200 most recent)
+  - Sortable and paginated table of events
+  
+- **Flags Page**: `http://localhost:3000/flags`
+  - View only blocked or challenged security events
+  - Analyze potential attack patterns
 
-## 🧩 Project Structure
+### Detection Logic
 
-A simple overview of folders/files can help others navigate your code:
+The application uses a client-side rule-based detection engine that analyzes queries for suspicious patterns:
 
+- **Block (Score 90)**: Queries containing `DROP`, `UNION`, `OR 1=1`, or SQL comments (`--`)
+- **Challenge (Score 55)**: Queries with suspicious combinations of `OR` and `=` operators
+- **Allow (Score 0)**: Clean queries that pass all checks
+
+All decisions are logged to the database via the `/api/log` endpoint for analysis.
+
+### API Endpoints
+
+The application exposes two REST API endpoints:
+
+- **POST `/api/query`**: Execute a SELECT query on the `employee_info` table
+  ```json
+  {
+    "query": "SELECT * FROM employee_info WHERE id = 1"
+  }
+  ```
+
+- **POST `/api/log`**: Log a security event
+  ```json
+  {
+    "decision": "block",
+    "score": 90,
+    "query": "SELECT * FROM employee_info WHERE 1=1"
+  }
+  ```
+
+### Building for Production
+
+```bash
+npm run build
+npm start
 ```
-SQLock/
-├── src/
-│   ├── main.py
-│   └── utils/
-├── tests/
-├── docs/
-└── README.md
+
+### Development Scripts
+
+- `npm run dev` - Start development server with Turbopack
+- `npm run build` - Build for production
+- `npm start` - Start production server
+- `npm run lint` - Run ESLint
+- `npm run lint:fix` - Fix ESLint issues automatically
+- `npm run format:check` - Check code formatting
+- `npm run format:write` - Format code with Prettier
+- `npm run typecheck` - Run TypeScript type checking
+- `npm run check` - Run both linting and type checking
+
+## 🔒 Security Features
+
+### Multi-Layer Protection
+
+1. **Input Validation**: All queries are validated and normalized before processing
+2. **Query Restriction**: Only `SELECT` queries are permitted
+3. **Table Restriction**: Queries are limited to the `employee_info` table only
+4. **Parameterized Queries**: All database operations use prepared statements via `mysql2`
+5. **Pattern Detection**: Rule-based engine identifies suspicious SQL patterns
+6. **Comprehensive Logging**: All security events are logged with timestamps and metadata
+
+### Database Schema
+
+The `Security_Event` table stores all detection results:
+
+```sql
+CREATE TABLE Security_Event (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    ts_utc TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    decision VARCHAR(50) NOT NULL,      -- 'allow', 'challenge', or 'block'
+    suspicion_score INT NOT NULL,       -- 0-100 risk score
+    query_template TEXT                  -- The query that was analyzed
+);
 ```
 
 ## 🧠 Technologies Used
 
-- **Languages:** Python, SQL, TypeScript, Tailwind CSS, Next.js
-    
-- **Database:** MySQL
-    
-- **Tools:**
-    
-    - ZeroTier (for collaborative networking) 
-        
-    - GitHub (for source code management)
-        
-    - Mockaroo (for mock data generation)
-        
-    - HeidiSQL (for database management)
-        
+### Core Stack
+- **Next.js 15** - React framework with App Router
+- **TypeScript** - Type-safe development
+- **React 19** - UI library
+- **Tailwind CSS 4** - Utility-first styling
+- **MySQL2** - MySQL database driver for Node.js
+
+### UI Components & Styling
+- **Shadcn UI** - Reusable component library
+- **Radix UI** - Accessible UI primitives
+- **Lucide React** - Icon library
+- **next-themes** - Dark/light mode support
+
+### Data & Validation
+- **TanStack Table** - Powerful table management
+- **Zod** - Schema validation
+- **@t3-oss/env-nextjs** - Type-safe environment variables
+
+### Development Tools
+- **ESLint** - Code linting
+- **Prettier** - Code formatting
+- **PostCSS** - CSS processing
+
+### Infrastructure
+- **MySQL** - Primary database for security event storage
+- **Node.js** - JavaScript runtime
 
 
 ## 👤 Author / Maintainers
@@ -163,4 +241,4 @@ This project is maintained by the following group members:
 
 ## 🌟 Acknowledgments
 
-- This project is for the CS4389 Data and Applications Security course at The University of Texas at Dallas - Richardson.
+- This project was developed for the **CS4389 Data and Applications Security** course at **The University of Texas at Dallas - Richardson**.
