@@ -105,8 +105,8 @@ export default function SplashIntro() {
         transitionDuration: `${CONFIG.fadeMs}ms`,
         transitionTimingFunction: CONFIG.fadeEasing,
         transitionProperty: "opacity",
-        backdropFilter: visible ? "blur(20px)" : "blur(0px)",
-        backgroundColor: visible ? "rgba(0, 0, 0, 0.5)" : "transparent",
+        backdropFilter: visible ? "blur(4.5px)" : "blur(0px)",
+        backgroundColor: visible ? "rgba(0, 0, 0, 0.30)" : "transparent",
       }}
     >
       {/* ambient glow */}
