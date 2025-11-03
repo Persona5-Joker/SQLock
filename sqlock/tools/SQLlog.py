@@ -3,7 +3,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.exc import SQLAlchemyError
 
 # Database configuration
-DB_USER = 'KatieHuang'
+DB_USER = 'DavidWu'
 DB_PASS = 'password'
 DB_HOST = '10.147.17.110'
 DB_PORT = '3306'
