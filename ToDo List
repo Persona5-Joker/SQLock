@@ -1,4 +1,4 @@
-Security - after 3 failed attempts login is locked out.
-Security - If recognizes a SQL query lockout immediately.
+Security - after 3 failed attempts login is locked out. (Dani)
+Security - If recognizes a SQL query lockout immediately. (Faizan)
 
-- Implement an input validation for the system. 
+- Implement an input validation for the system. (Vinay)
