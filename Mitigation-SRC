@@ -37,27 +37,5 @@ def find_user_by_id(user_id):
     # The '%s' is a secure placeholder for a parameter.
     query = "SELECT id, username, email FROM users WHERE id = %s"
 
-    try:
-        # Establish a connection to the database
-        conn = mysql.connector.connect(**DB_CONFIG)
-        cursor = conn.cursor(dictionary=True)
 
-        # The database driver safely combines the query and the parameter.
-        # The parameter must be in a tuple, e.g., (user_id,)
-        cursor.execute(query, (user_id,))
-
-        # Fetch the result
-        return cursor.fetchone()
-
-    except Exception as e:
-        print(f"An error occurred while connecting to the database: {e}")
-        return None
-
-    finally:
-        # Ensure the connection is closed, even if errors occur.
-        if 'conn' in locals() and conn.is_connected():
-            cursor.close()
-            conn.close()
-
-#
 # TODO: Add your other database functions below, following the same secure pattern.
