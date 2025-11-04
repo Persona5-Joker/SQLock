@@ -1,0 +1,4 @@
+Security - after 3 failed attempts login is locked out.
+Security - If recognizes a SQL query lockout immediately.
+
+- Implement an input validation for the system. 
