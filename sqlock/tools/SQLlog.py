@@ -3,7 +3,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.exc import SQLAlchemyError
 
 # Database configuration
-DB_USER = 'DavidWu'
+DB_USER = 'KatieHuang'
 DB_PASS = 'password'
 DB_HOST = '10.147.17.110'
 DB_PORT = '3306'
@@ -50,7 +50,7 @@ SQLI_SIGNATURES = [
     
 # Load log data into a DataFrame (Example: Reading a CSV log file)
 try:
-    log_df = pd.read_csv("path/to/your/web_server_access.log", 
+    log_df = pd.read_csv("C:/Users/katie/AppData/Roaming/HeidiSQL/Sessionlogs/000001.log", 
                          sep=r'\s+', 
                          header=None, 
                          names=['IP', 'Time', 'Method', 'URL', 'Status', 'Size', 'Referrer', 'UserAgent'],
@@ -86,3 +86,4 @@ if dataframe is not None:
     print(dataframe.head())  # Display the first few rows of the DataFrame
 else :
     print("No data to display.")
+
