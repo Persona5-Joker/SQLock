@@ -1,7 +1,6 @@
-import { DataTable } from "~/components/data-table";
-import { securityEventColumns } from "~/components/security-event-columns";
 import { getRecentSecurityEvents, type SecurityEventRow } from "~/server/security-events";
 import type { SecurityEventLog } from "~/types/security-event-log";
+import LogsPageClient from "./_components/logs-page-client";
 
 function formatRows(rows: readonly SecurityEventRow[]): SecurityEventLog[] {
   return rows.map((row) => ({
@@ -24,19 +23,6 @@ export default async function LogsPage() {
     loadError = "Unable to reach the database. No log entries available.";
   }
 
-  return (
-    <div className="max-w-6xl mx-auto">
-      <div className="flex items-center justify-between mb-4">
-        <h1 className="text-2xl font-bold text-foreground">System Logs</h1>
-      </div>
-
-      <DataTable
-        columns={securityEventColumns}
-        data={rows}
-        emptyMessage="No log entries found."
-      />
-
-      {loadError && <div className="mt-3 text-sm text-destructive bg-destructive/10 border border-destructive/50 rounded-md p-3">{loadError}</div>}
-    </div>
-  );
+  return <LogsPageClient initialRows={rows} initialError={loadError} />;
 }
+
