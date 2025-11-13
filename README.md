@@ -2,23 +2,23 @@
 
 **`DROP` threats, not tables.**
 
-## 🚀 Overview
+## Overview
 
 SQLock is a security system designed to detect and prevent SQL injection (SQLi) attacks111. This project was created for the CS4389 Data and Applications Security course.
 
 The primary goal is to create a secure database solution for real-world applications by building a tool that not only blocks malicious queries but also logs them for analysis3333. The system works by analyzing user inputs at the application layer and logging suspicious activity to identify potential attack patterns.
 
-## 🛠️ Features
+## Features
 
-✅ SQL Injection Prevention: Actively detects and mitigates SQLi attacks.
+SQL Injection Prevention: Actively detects and mitigates SQLi attacks.
 
-✅ Advanced Logging: Logs user inputs, including timestamps, user information, and the raw query string, to trace potential attacks.
+Advanced Logging: Logs user inputs, including timestamps, user information, and the raw query string, to trace potential attacks.
 
-✅ Pattern Analysis: Includes tools to analyze logs to identify probable SQL injection patterns.
+Pattern Analysis: Includes tools to analyze logs to identify probable SQL injection patterns.
 
-✅ Rule-Based Detection: Uses a set of detection rules to identify common SQLi payloads, such as tautologies (`or 1=1`), SQL comments (`--`, `/*`), `UNION` `SELECT` queries, and more.
+Rule-Based Detection: Uses a set of detection rules to identify common SQLi payloads, such as tautologies (`or 1=1`), SQL comments (`--`, `/*`), `UNION` `SELECT` queries, and more.
 
-## 📦 Installation
+## Installation
 
 ### Prerequisites
 
@@ -76,7 +76,7 @@ The primary goal is to create a secure database solution for real-world applicat
     - Populate the database by running the `Employee_Info.sql` script.
         
 
-## ⚙️ Usage
+## Usage
 
 _Further instructions on running the main application will be added here._
 
@@ -112,16 +112,19 @@ Credits: CS4389 project team
 
 ## 🧩 Project Structure
 
-A simple overview of folders/files can help others navigate your code:
+Current project organization:
 
 ```
 SQLock/
-├── src/
-│   ├── main.py
-│   └── utils/
-├── tests/
-├── docs/
-└── README.md
+├── Mitigation-SRC              # Main security module
+├── pseudo_log.txt              # Security event logging
+├── tests/                      # All testing files
+│   ├── setup_test_db.py        # Database initialization
+│   ├── test_comprehensive_security.py  # Full test suite
+│   ├── demo_sqllock.py         # Interactive demo
+│   └── README.md               # Test documentation
+├── sqlock/                     # Next.js web interface
+└── README.md                   # This file
 ```
 
 ## 🧠 Technologies Used
@@ -175,7 +178,7 @@ This project is maintained by the following group members:
 - Caiyun (Katie) Huang
     
 
-## 🌟 Acknowledgments
+## Acknowledgments
 
 - This project is for the CS4389 Data and Applications Security course at The University of Texas at Dallas - Richardson.
 

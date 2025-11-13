@@ -1,0 +1,61 @@
+# Security and Database Files
+pseudo_log.txt
+suspicious_log.txt
+*.log
+database.db
+*.sqlite
+*.sqlite3
+
+# Python Files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Virtual Environment
+venv/
+env/
+.venv/
+.env/
+
+# Environment Variables and Secrets
+.env
+.env.*
+config.ini
+secrets.py
+credentials.json
+
+# Database Connection Files
+db_config.py
+connection.py
+
+# IDE and Editor Files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS Generated Files
+.DS_Store
+.DS_Store?
+._*
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Testing and Development
+test_output/
+debug/
+temp/
+*.tmp
+
+# Distribution and Build
+dist/
+build/
+*.egg-info/
+
+# Security Testing Artifacts
+attack_logs/
+pentest_results/
+vulnerability_scan/
