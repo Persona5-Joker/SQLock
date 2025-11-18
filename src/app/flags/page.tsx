@@ -22,8 +22,14 @@ export default async function FlagsPage() {
   }
 
   return (
-    <div className="max-w-5xl mx-auto">
-      <h1 className="text-2xl font-bold mb-4 text-destructive">Flagged Attempts</h1>
+    <div className="space-y-6">
+      <div className="rounded-[2.5rem] border border-white/30 p-6 shadow-lg backdrop-blur-2xl dark:border-white/10">
+        <p className="text-xs uppercase tracking-[0.4em] text-muted-foreground">Alerts</p>
+        <h1 className="mt-2 text-3xl font-semibold text-destructive">Flagged attempts</h1>
+        <p className="mt-2 text-sm text-muted-foreground">
+          Every block-level event is elevated with neon pills and timestamp context so you can triage at a glance.
+        </p>
+      </div>
       <DataTable
         columns={securityEventColumns}
         data={logs}

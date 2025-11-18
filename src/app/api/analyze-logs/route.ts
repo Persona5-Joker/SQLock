@@ -5,7 +5,24 @@ import path from "path";
 
 const execAsync = promisify(exec);
 
-export async function POST(request: Request) {
+type PythonAnalyzeResult = {
+  success: boolean;
+  incidents_found: number;
+  incidents_saved: number;
+  raw_output?: string;
+};
+
+function isPythonAnalyzeResult(value: unknown): value is PythonAnalyzeResult {
+  if (!value || typeof value !== "object") return false;
+  const candidate = value as Record<string, unknown>;
+  return (
+    typeof candidate.success === "boolean" &&
+    typeof candidate.incidents_found === "number" &&
+    typeof candidate.incidents_saved === "number"
+  );
+}
+
+export async function POST(_request: Request) {
   try {
     // Path to the Python script
     const pythonScriptPath = path.join(process.cwd(), "sqlock", "tools", "SQLlog.py");
@@ -18,24 +35,28 @@ export async function POST(request: Request) {
     
     console.log(`Executing: ${command}`);
     
-    const { stdout, stderr } = await execAsync(command, {
+    const { stdout, stderr } = (await execAsync(command, {
       timeout: 30000, // 30 second timeout
-    });
+    })) as { stdout: string | Buffer; stderr: string | Buffer };
+
+    const stdoutText: string = typeof stdout === "string" ? stdout : stdout.toString("utf8");
+    const stderrText: string = typeof stderr === "string" ? stderr : stderr.toString("utf8");
 
     // Try to parse JSON output from the script
-    let result;
+    let result: PythonAnalyzeResult = {
+      success: true,
+      incidents_found: 0,
+      incidents_saved: 0,
+    };
     try {
       // The script outputs JSON on the last line
-      const lines = stdout.trim().split('\n');
+      const lines = stdoutText.trim().split("\n");
       const jsonLine = lines[lines.length - 1];
       if (jsonLine) {
-        result = JSON.parse(jsonLine);
-      } else {
-        result = {
-          success: true,
-          incidents_found: 0,
-          incidents_saved: 0,
-        };
+        const parsed = JSON.parse(jsonLine) as unknown;
+        if (isPythonAnalyzeResult(parsed)) {
+          result = parsed;
+        }
       }
     } catch (e) {
       console.error("Failed to parse Python output:", e);
@@ -43,15 +64,16 @@ export async function POST(request: Request) {
         success: true,
         incidents_found: 0,
         incidents_saved: 0,
-        raw_output: stdout,
+        raw_output: stdoutText,
       };
     }
 
+    const safeErrors = stderrText.trim().length > 0 ? stderrText : null;
+
     return NextResponse.json({
-      success: true,
       ...result,
-      logs: stdout,
-      errors: stderr || null,
+      logs: stdoutText,
+      errors: safeErrors,
     });
   } catch (error) {
     console.error("Error analyzing logs:", error);

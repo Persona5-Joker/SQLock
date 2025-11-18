@@ -229,92 +229,107 @@ export default function InputPage() {
   const tableData = serverRows?.rows ?? [];
   const tableEmptyMessage = infoMessage ?? (serverRows ? "No rows returned." : "Run a query to see output here.");
 
-  return (
-    <div className="max-w-6xl mx-auto">
-      <h1 className="text-2xl font-bold mb-4 text-foreground">SQLock – Input Simulation</h1>
-
-      <div className="space-y-6">
-        <div>
-          <form onSubmit={handleSubmit}>
-            <label className="block mb-2 font-medium text-foreground">SQL Input</label>
-            <Textarea
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              className="mb-2 h-40"
-              placeholder="Enter SQL command"
-            />
-
-            <div className="flex items-center gap-3">
-              <Button
-                type="submit"
-                disabled={running}
-              >
-                {running ? "Running..." : "Run"}
-              </Button>
-
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => {
-                  setQuery("");
-                }}
-              >
-                Clear
-              </Button>
-
-              <Button
-                type="button"
-                variant="secondary"
-                onClick={() => void runSample()}
-                disabled={running}
-              >
-                Run sample
-              </Button>
-            </div>
-
-            {/* Decision display intentionally removed to keep the input UI compact */}
-          </form>
+    return (
+      <div className="space-y-10">
+        <div className="rounded-[2.5rem] border border-white/40 p-8 shadow-lg backdrop-blur-2xl dark:border-white/10">
+          <p className="text-xs uppercase tracking-[0.4em] text-muted-foreground">Simulator</p>
+          <h1 className="mt-3 text-3xl font-semibold text-foreground sm:text-4xl">Input console</h1>
+          <p className="mt-3 max-w-2xl text-sm text-muted-foreground">
+            Mirror the polish of an Apple lab: enter SQL statements, watch the detector respond in real time, and ship
+            events into the telemetry log with a single tap.
+          </p>
         </div>
 
-        <div>
-          <div className="p-4 border border-border rounded-lg bg-card min-h-[200px] shadow-sm">
-            <div className="flex items-center justify-between mb-2">
-              <div className="font-semibold text-foreground">Query Output</div>
-              {serverRows ? (
-                <div className="text-xs font-medium text-primary bg-primary/10 px-2 py-1 rounded">Live</div>
-              ) : (
-                <div className="text-xs font-medium text-muted-foreground bg-muted px-2 py-1 rounded">Idle</div>
-              )}
+        <div className="grid gap-6 lg:grid-cols-[1fr_1.1fr]">
+          <div className="rounded-[2rem] border border-white/40 p-6 shadow-md backdrop-blur-xl dark:border-white/10">
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <label className="mb-2 block text-sm font-medium text-foreground">SQL Input</label>
+                <Textarea
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  className="h-48 rounded-3xl border-white/30 bg-white/50 text-base shadow-inner shadow-white/20 placeholder:text-muted-foreground/60 dark:border-white/10 dark:bg-white/5"
+                  placeholder="SELECT employee_id, email FROM employee_info WHERE ..."
+                />
+              </div>
+
+              <div className="flex flex-wrap items-center gap-3">
+                <Button
+                  type="submit"
+                  disabled={running}
+                  className="rounded-full bg-gradient-to-r from-primary via-sky-400 to-indigo-500 px-6"
+                >
+                  {running ? "Running..." : "Run query"}
+                </Button>
+
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="rounded-full border border-border px-5"
+                  onClick={() => {
+                    setQuery("");
+                  }}
+                >
+                  Clear
+                </Button>
+
+                <Button
+                  type="button"
+                  variant="secondary"
+                  className="rounded-full px-5"
+                  onClick={() => void runSample()}
+                  disabled={running}
+                >
+                  Run sample
+                </Button>
+              </div>
+            </form>
+          </div>
+
+          <div className="rounded-[2rem] border border-white/40 p-6 shadow-md backdrop-blur-xl dark:border-white/10">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-semibold text-foreground">Query Output</p>
+                <p className="text-xs text-muted-foreground">Live telemetry from SQLock DB</p>
+              </div>
+              <div className={`rounded-full px-4 py-1 text-xs font-semibold ${serverRows ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"}`}>
+                {serverRows ? "Live" : "Idle"}
+              </div>
             </div>
 
-            {/* show detection result */}
-            <div className="mb-3">
-              <div className="text-sm text-foreground">Detector decision: <span className="font-medium text-accent-foreground">{result.decision ?? "-"}</span></div>
-              <div className="text-xs text-muted-foreground">Score: {result.score ?? "-"}</div>
+            <div className="my-4 rounded-2xl border border-white/30 bg-white/40 p-4 text-sm text-foreground shadow-inner dark:bg-white/5">
+              <div className="flex flex-wrap items-center gap-4">
+                <span className="text-xs uppercase tracking-[0.3em] text-muted-foreground">Decision</span>
+                <span className="rounded-full bg-primary/10 px-4 py-1 text-xs font-medium text-primary">
+                  {result.decision ?? "Awaiting input"}
+                </span>
+                <span className="text-xs text-muted-foreground">Score: {result.score ?? "–"}</span>
+                {lastQuery && (
+                  <span className="truncate text-xs text-muted-foreground">{lastQuery}</span>
+                )}
+              </div>
             </div>
-
-            {!lastQuery && infoMessage && (
-              <div className="text-sm text-muted-foreground">{infoMessage}</div>
-            )}
 
             {serverError && (
-              <div className="mt-2 p-2 border border-destructive/50 rounded bg-destructive/10 text-destructive text-sm">Server error: {serverError}</div>
+              <div className="mb-3 rounded-2xl border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">
+                Server error: {serverError}
+              </div>
             )}
 
-            {lastQuery && infoMessage && !serverRows && (
-              <div className="text-sm text-muted-foreground">{infoMessage}</div>
+            {(!serverRows || tableData.length === 0) && infoMessage && (
+              <p className="text-sm text-muted-foreground">{infoMessage}</p>
             )}
 
-            <div className="mt-2">
+            <div className="mt-4">
               <DataTable<TableRecord>
                 columns={tableColumns}
                 data={tableData}
                 emptyMessage={tableEmptyMessage}
+                className="rounded-[1.5rem] border border-white/20 bg-white/60 p-4 shadow-sm backdrop-blur-lg dark:bg-white/5"
               />
             </div>
           </div>
         </div>
       </div>
-    </div>
-  );
+    );
 }

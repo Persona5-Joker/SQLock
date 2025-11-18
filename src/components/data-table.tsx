@@ -64,7 +64,7 @@ export function DataTable<TData>({ columns, data, emptyMessage = "No results.", 
   return (
     <div className={className}>
       {/* Toolbar: filters, visibility, selection count */}
-      <div className="mb-2 flex flex-wrap items-center gap-3">
+      <div className="mb-4 flex flex-wrap items-center gap-3">
         <div className="text-sm text-muted-foreground">
           {table.getFilteredSelectedRowModel().rows.length} of {table.getFilteredRowModel().rows.length} row(s) selected
         </div>
@@ -76,7 +76,7 @@ export function DataTable<TData>({ columns, data, emptyMessage = "No results.", 
             onChange={(e) => {
               table.setGlobalFilter(e.target.value);
             }}
-            className="border border-input rounded-md px-3 py-1.5 text-sm w-64 bg-background text-foreground shadow-xs focus:outline-none focus:ring-2 focus:ring-ring"
+            className="w-64 rounded-full border border-white/40 bg-white/70 px-4 py-2 text-sm text-foreground shadow-inner shadow-white/30 backdrop-blur focus:outline-none focus:ring-2 focus:ring-ring dark:bg-white/10"
           />
         </div>
 
@@ -84,6 +84,7 @@ export function DataTable<TData>({ columns, data, emptyMessage = "No results.", 
           <Button
             variant="outline"
             size="sm"
+            className="rounded-full border border-white/40 px-4 text-xs uppercase tracking-[0.3em] text-foreground/70 hover:bg-white/40"
             onClick={() => {
               table.resetColumnFilters();
               table.resetSorting();
@@ -96,11 +97,11 @@ export function DataTable<TData>({ columns, data, emptyMessage = "No results.", 
         </div>
       </div>
 
-      <div className="overflow-hidden rounded-md border border-border shadow-sm">
+      <div className="overflow-hidden rounded-[1.5rem] border border-white/30 bg-card/80 shadow-lg backdrop-blur-xl dark:border-white/10">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id}>
+              <TableRow key={headerGroup.id} className="bg-white/50 text-xs uppercase tracking-[0.3em] text-muted-foreground dark:bg-white/5">
                 {headerGroup.headers.map((header) => (
                   <TableHead key={header.id}>
                     {header.isPlaceholder
@@ -120,9 +121,10 @@ export function DataTable<TData>({ columns, data, emptyMessage = "No results.", 
                 <TableRow
                   key={row.id}
                   data-state={row.getIsSelected() && "selected"}
+                  className="transition hover:bg-white/40 dark:hover:bg-white/10"
                 >
                   {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
+                    <TableCell key={cell.id} className="text-sm">
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}
                     </TableCell>
                   ))}
@@ -140,12 +142,12 @@ export function DataTable<TData>({ columns, data, emptyMessage = "No results.", 
       </div>
 
       {/* Pagination controls */}
-      <div className="flex items-center justify-between gap-2 py-4">
+      <div className="flex flex-wrap items-center justify-between gap-3 py-4">
         <div className="flex items-center gap-2">
-          <Button size="sm" variant="outline" onClick={() => table.previousPage()} disabled={!table.getCanPreviousPage()}>
+          <Button size="sm" variant="outline" className="rounded-full" onClick={() => table.previousPage()} disabled={!table.getCanPreviousPage()}>
             Previous
           </Button>
-          <Button size="sm" variant="outline" onClick={() => table.nextPage()} disabled={!table.getCanNextPage()}>
+          <Button size="sm" variant="outline" className="rounded-full" onClick={() => table.nextPage()} disabled={!table.getCanNextPage()}>
             Next
           </Button>
         </div>
@@ -157,7 +159,7 @@ export function DataTable<TData>({ columns, data, emptyMessage = "No results.", 
         <div className="flex items-center gap-2">
           <label className="text-sm text-foreground">Rows per page:</label>
           <select
-            className="border border-input rounded-md px-2 py-1 text-sm bg-background text-foreground shadow-xs focus:outline-none focus:ring-2 focus:ring-ring"
+            className="rounded-full border border-white/40 bg-white/80 px-3 py-1 text-sm text-foreground shadow-inner focus:outline-none focus:ring-2 focus:ring-ring dark:bg-white/10"
             value={table.getState().pagination.pageSize}
             onChange={(e) => table.setPageSize(Number(e.target.value))}
           >
