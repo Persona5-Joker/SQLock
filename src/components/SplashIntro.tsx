@@ -12,6 +12,7 @@ const CONFIG = {
   logoMaxPx: 768,
   logoHeightVH: 56, // vh
   logoMaxHeightPx: 720,
+  logoScale: 1.15, // fine-tune how much the image fills the oval
 
   // pulse / breathing
   pulse: {
@@ -183,7 +184,7 @@ export default function SplashIntro() {
                 fill
                 sizes={`(max-width: 768px) ${CONFIG.logoWidthVW}vw, ${CONFIG.logoMaxPx}px`}
                 priority
-                style={{ objectFit: "contain" }}
+                style={{ objectFit: "contain", transform: `scale(${CONFIG.logoScale})`, transformOrigin: "center" }}
               />
             </div>
           </div>
