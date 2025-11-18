@@ -11,7 +11,7 @@ export async function POST(request: Request) {
     const pythonScriptPath = path.join(process.cwd(), "sqlock", "tools", "SQLlog.py");
     
     // Path to Python executable in virtual environment
-    const pythonExe = path.join(process.cwd(), ".venv", "Scripts", "python.exe");
+    const pythonExe = path.join(process.cwd(), "venv", "Scripts", "python.exe");
 
     // Execute the Python script with --from-db flag to read from database
     const command = `"${pythonExe}" "${pythonScriptPath}" --from-db`;
