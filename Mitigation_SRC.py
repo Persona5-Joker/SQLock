@@ -1,4 +1,6 @@
 # Required library: pip install mysql-connector-python
+import argparse
+import json
 import mysql.connector
 from datetime import datetime, timedelta
 import hashlib
@@ -416,3 +418,56 @@ def authenticate_user(username, password):
 # - setup_test_db.py: Database initialization
 # - test_comprehensive_security.py: Full security test suite  
 # - demo_sqllock.py: Interactive demo
+
+
+def _run_cli_interface() -> None:
+    """Allows calling the mitigation helpers from the command line.
+
+    This is primarily used by the Next.js frontend through a serverless route
+    that shells out to Python and expects JSON back. Keeping the logic here
+    avoids duplicating the SQLi detection heuristics in TypeScript.
+    """
+
+    parser = argparse.ArgumentParser(description="SQLock mitigation CLI")
+    parser.add_argument(
+        "--query",
+        dest="query",
+        type=str,
+        required=True,
+        help="User-provided string / SQL to analyze for SQLi patterns",
+    )
+    parser.add_argument(
+        "--username",
+        dest="username",
+        type=str,
+        default=None,
+        help="Optional username to associate with the analysis",
+    )
+    parser.add_argument(
+        "--apply-lockout",
+        dest="apply_lockout",
+        action="store_true",
+        help="Apply the immediate SQL lockout when a malicious pattern is detected",
+    )
+
+    args = parser.parse_args()
+
+    malicious, pattern = detect_sql_injection_patterns(args.query)
+    lockout_applied = False
+
+    if malicious and args.apply_lockout and args.username:
+        apply_immediate_sql_lockout(args.username, pattern or "Suspicious pattern")
+        lockout_applied = True
+
+    response = {
+        "success": True,
+        "malicious": malicious,
+        "pattern": pattern,
+        "lockout_applied": lockout_applied,
+    }
+
+    print(json.dumps(response))
+
+
+if __name__ == "__main__":
+    _run_cli_interface()

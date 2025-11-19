@@ -8,12 +8,27 @@ import { Button } from "~/components/ui/button";
 import { Textarea } from "~/components/ui/textarea";
 import { DataTable } from "~/components/data-table";
 
-type DetectionResult = { decision?: string; score?: number };
+type DetectionResult = {
+  decision?: string;
+  score?: number;
+  pattern?: string | null;
+  engine?: string;
+  lockoutApplied?: boolean;
+  malicious?: boolean;
+  error?: string;
+};
 type TableCell = string | number | null;
 type TableRow = TableCell[];
 type TableRecord = Record<string, TableCell>;
 type ServerResult = { columns: string[]; rows: TableRecord[] };
 type ServerResponse = { columns: string[]; rows: TableRow[] };
+type MitigationResponse = {
+  success?: boolean;
+  malicious?: boolean;
+  pattern?: string | null;
+  lockout_applied?: boolean;
+  error?: string;
+};
 
 type QueryPayload = {
   columns?: unknown;
@@ -68,6 +83,7 @@ export default function InputPage() {
   const [infoMessage, setInfoMessage] = useState<string | undefined>(
     "Run a query to see output here.",
   );
+  const [mitigationError, setMitigationError] = useState<string | undefined>(undefined);
 
   // Simple local detector to replace removed server/trpc
   function detectQuery(q: string): DetectionResult {
@@ -122,6 +138,37 @@ export default function InputPage() {
     }
   }
 
+  async function fetchMitigation(sql: string): Promise<DetectionResult | null> {
+    try {
+      const response = await fetch("/api/mitigation", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query: sql, applyLockout: false }),
+        cache: "no-store",
+      });
+
+      const payload = (await response.json()) as MitigationResponse;
+
+      if (!response.ok || !payload || payload.success === false) {
+        const errorMessage = payload?.error ?? "Mitigation analysis failed.";
+        throw new Error(errorMessage);
+      }
+
+      return {
+        decision: payload.malicious ? "block" : "allow",
+        score: payload.malicious ? 95 : 5,
+        pattern: payload.pattern ?? null,
+        engine: "Mitigation_SRC",
+        lockoutApplied: payload.lockout_applied ?? false,
+        malicious: payload.malicious ?? false,
+      };
+    } catch (err) {
+      console.error("fetchMitigation failed", err);
+      setMitigationError(err instanceof Error ? err.message : String(err));
+      return null;
+    }
+  }
+
   const runPipeline = async (sql: string) => {
     const trimmed = sql.trim();
     if (!trimmed) return;
@@ -130,10 +177,18 @@ export default function InputPage() {
     setServerRows(undefined);
     setServerError(undefined);
     setInfoMessage(undefined);
+    setMitigationError(undefined);
 
     try {
-      const detection = detectQuery(trimmed);
+      let detection = { ...detectQuery(trimmed), engine: "Local heuristic" };
       setResult(detection);
+
+      const mitigation = await fetchMitigation(trimmed);
+      if (mitigation) {
+        detection = mitigation;
+        setResult(detection);
+      }
+
       setLastQuery(trimmed);
 
       // Log the security event to the database
@@ -304,6 +359,13 @@ export default function InputPage() {
                   {result.decision ?? "Awaiting input"}
                 </span>
                 <span className="text-xs text-muted-foreground">Score: {result.score ?? "–"}</span>
+                <span className="text-xs text-muted-foreground">Engine: {result.engine ?? "Local heuristic"}</span>
+                {result.pattern && (
+                  <span className="text-xs text-muted-foreground">Pattern: {result.pattern}</span>
+                )}
+                {result.lockoutApplied && (
+                  <span className="text-xs text-amber-600 dark:text-amber-400">Lockout queued</span>
+                )}
                 {lastQuery && (
                   <span className="truncate text-xs text-muted-foreground">{lastQuery}</span>
                 )}
@@ -313,6 +375,12 @@ export default function InputPage() {
             {serverError && (
               <div className="mb-3 rounded-2xl border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">
                 Server error: {serverError}
+              </div>
+            )}
+
+            {mitigationError && (
+              <div className="mb-3 rounded-2xl border border-amber-400/70 bg-amber-100/40 p-3 text-sm text-amber-900 dark:border-amber-200/30 dark:bg-amber-500/10 dark:text-amber-100">
+                Mitigation warning: {mitigationError}
               </div>
             )}
 
