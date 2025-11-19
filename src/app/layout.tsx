@@ -1,6 +1,7 @@
 import "~/styles/globals.css";
 
 import Link from "next/link";
+import Image from "next/image";
 import { type Metadata } from "next";
 import Script from "next/script";
 import { Geist } from "next/font/google";
@@ -44,88 +45,80 @@ export default function RootLayout({
           crossOrigin="anonymous"
         />
       </head>
-      <body className="min-h-screen">
+      <body className="min-h-screen antialiased">
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
           enableSystem
           disableTransitionOnChange
         >
-          <nav className="bg-card border-b border-border px-6 py-3">
-            <div className="max-w-6xl mx-auto flex items-center">
-              <div className="flex-shrink-0">
-                <Link href="/" className="font-bold text-lg text-foreground hover:text-primary transition-colors">
-                  SQLock
+          <div className="fixed inset-0 -z-10 overflow-hidden">
+            <div className="absolute inset-0 opacity-70 dark:opacity-50" />
+            <div className="absolute -top-24 left-1/2 h-96 w-96 -translate-x-1/2 rounded-full bg-gradient-to-br from-[#a5b4fc] via-[#38bdf8] to-transparent blur-3xl opacity-60" />
+            <div className="absolute top-40 right-10 h-64 w-64 rounded-full bg-gradient-to-br from-[#fbbf24] via-transparent to-transparent blur-3xl opacity-70" />
+          </div>
+
+          <div className="relative flex min-h-screen flex-col">
+            <header className="sticky top-4 z-20 px-6">
+              <div className="mx-auto flex max-w-6xl items-center gap-4 rounded-full border border-white/30 bg-card/80 px-6 py-3 shadow-lg shadow-black/5 backdrop-blur-xl dark:border-white/10">
+                <Link href="/" className="flex items-center gap-2 text-lg font-semibold tracking-tight text-foreground">
+                  <div className="relative h-10 w-10">
+                    <Image src="/SQLockLogo2.png" alt="SQLock" fill sizes="40px" className="object-contain" priority />
+                  </div>
+                  <span className="glow-text text-base sm:text-lg">SQLock</span>
                 </Link>
-              </div>
 
-              <div className="flex-1 flex justify-center">
-                <NavigationMenu viewport={false}>
-                  <NavigationMenuList>
-                    <NavigationMenuItem>
-                      <NavigationMenuLink asChild>
-                        <Link 
-                          href="/input"
-                          className="group inline-flex h-9 w-max items-center justify-center rounded-md bg-transparent px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50"
-                        >
-                          Input
-                        </Link>
-                      </NavigationMenuLink>
-                    </NavigationMenuItem>
-                    <NavigationMenuItem>
-                      <NavigationMenuLink asChild>
-                        <Link 
-                          href="/logs"
-                          className="group inline-flex h-9 w-max items-center justify-center rounded-md bg-transparent px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50"
-                        >
-                          Logs
-                        </Link>
-                      </NavigationMenuLink>
-                    </NavigationMenuItem>
-                    <NavigationMenuItem>
-                      <NavigationMenuLink asChild>
-                        <Link 
-                          href="/flags"
-                          className="group inline-flex h-9 w-max items-center justify-center rounded-md bg-transparent px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50"
-                        >
-                          Flags
-                        </Link>
-                      </NavigationMenuLink>
-                    </NavigationMenuItem>
-                  </NavigationMenuList>
-                </NavigationMenu>
-              </div>
+                <div className="hidden flex-1 justify-center md:flex">
+                  <NavigationMenu viewport={false}>
+                    <NavigationMenuList className="gap-2">
+                      {[{ label: "Input", href: "/input" }, { label: "Logs", href: "/logs" }, { label: "Flags", href: "/flags" }].map((item) => (
+                        <NavigationMenuItem key={item.href}>
+                          <NavigationMenuLink asChild>
+                            <Link
+                              href={item.href}
+                              className="inline-flex items-center rounded-full px-4 py-2 text-sm font-medium text-foreground/80 transition hover:bg-secondary hover:text-secondary-foreground"
+                            >
+                              {item.label}
+                            </Link>
+                          </NavigationMenuLink>
+                        </NavigationMenuItem>
+                      ))}
+                    </NavigationMenuList>
+                  </NavigationMenu>
+                </div>
 
-              <div className="flex-shrink-0">
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    asChild
-                  >
-                    <a
-                      href={_teamData.projectRepo}
-                      target="_blank"
-                      rel="noreferrer"
-                      aria-label="Open project on GitHub"
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="20"
-                        height="20"
-                        viewBox="0 0 24 24"
-                        fill="currentColor"
-                      >
-                        <path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.387.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61-.546-1.387-1.333-1.757-1.333-1.757-1.09-.744.083-.729.083-.729 1.205.085 1.84 1.236 1.84 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.775.418-1.305.762-1.605-2.665-.305-5.466-1.332-5.466-5.93 0-1.31.468-2.381 1.235-3.221-.123-.303-.535-1.527.117-3.176 0 0 1.008-.322 3.301 1.23.958-.266 1.984-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.649.242 2.873.12 3.176.77.84 1.233 1.911 1.233 3.221 0 4.61-2.805 5.62-5.476 5.92.43.37.823 1.102.823 2.222 0 1.606-.015 2.898-.015 3.293 0 .322.216.694.825.576C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12" />
-                      </svg>
+                <div className="ml-auto flex items-center gap-2">
+                  <Button asChild size="sm" variant="ghost" className="hidden rounded-full border border-border px-4 text-xs uppercase tracking-wider text-foreground/70 md:inline-flex">
+                    <a href={_teamData.projectRepo} target="_blank" rel="noreferrer">
+                      GitHub
                     </a>
+                  </Button>
+                  <Button asChild className="rounded-full bg-gradient-to-br from-primary via-sky-400 to-indigo-500 px-5 text-sm font-semibold text-white shadow-md shadow-primary/30 transition hover:shadow-lg">
+                    <Link href="/input">Launch Console</Link>
                   </Button>
                   <ThemeToggle />
                 </div>
               </div>
-            </div>
-          </nav>
-          <main className="p-6">{children}</main>
+            </header>
+
+            <main className="relative z-10 flex-1 px-6 py-10">
+              <div className="mx-auto w-full max-w-6xl space-y-12">{children}</div>
+            </main>
+
+            <footer className="px-6 pb-10">
+              <div className="mx-auto flex max-w-6xl flex-col gap-4 rounded-3xl border border-white/30 bg-card/70 px-6 py-4 text-sm text-muted-foreground backdrop-blur-xl dark:border-white/10 sm:flex-row sm:items-center sm:justify-between">
+                <p>© {new Date().getFullYear()} SQLock. Crafted for next-gen SQLi defense.</p>
+                <div className="flex items-center gap-4 text-xs uppercase tracking-[0.2em] text-foreground/60">
+                  <span>Detect</span>
+                  <span className="h-2 w-2 rounded-full bg-primary" />
+                  <span>Prevent</span>
+                  <span className="h-2 w-2 rounded-full bg-primary" />
+                  <span>Learn</span>
+                </div>
+              </div>
+            </footer>
+          </div>
+
           <SplashIntro />
         </ThemeProvider>
       </body>

@@ -7,14 +7,14 @@ import { Button } from "~/components/ui/button";
 import { cn } from "~/lib/utils";
 import type { SecurityEventLog } from "~/types/security-event-log";
 
-function formatDecision(decision: string) {
+function decisionStyles(decision: string) {
   switch (decision) {
     case "block":
-      return "text-red-600";
+      return "bg-red-500/15 text-red-500";
     case "challenge":
-      return "text-yellow-600";
+      return "bg-amber-400/20 text-amber-500";
     default:
-      return "text-green-600";
+      return "bg-emerald-400/20 text-emerald-500";
   }
 }
 
@@ -35,7 +35,7 @@ export const securityEventColumns: ColumnDef<SecurityEventLog>[] = [
               column.clearSorting(); // Clear sorting
             }
           }}
-          className="flex items-center gap-1"
+          className="flex items-center gap-1 rounded-full px-3 py-1 text-xs font-medium text-foreground/80"
         >
           Time (UTC)
           {isSorted === "asc" ? (
@@ -69,7 +69,7 @@ export const securityEventColumns: ColumnDef<SecurityEventLog>[] = [
               column.clearSorting(); // Clear sorting
             }
           }}
-          className="flex items-center gap-1"
+          className="flex items-center gap-1 rounded-full px-3 py-1 text-xs font-medium text-foreground/80"
         >
           Decision
           {isSorted === "asc" ? (
@@ -84,7 +84,11 @@ export const securityEventColumns: ColumnDef<SecurityEventLog>[] = [
     },
     cell: ({ row }) => {
       const decision = row.getValue<string>("decision");
-      return <span className={cn("font-medium", formatDecision(decision))}>{decision}</span>;
+      return (
+        <span className={cn("inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold", decisionStyles(decision))}>
+          {decision}
+        </span>
+      );
     },
   },
   {
@@ -103,7 +107,7 @@ export const securityEventColumns: ColumnDef<SecurityEventLog>[] = [
               column.clearSorting(); // Clear sorting
             }
           }}
-          className="flex items-center gap-1"
+          className="flex items-center gap-1 rounded-full px-3 py-1 text-xs font-medium text-foreground/80"
         >
           Score
           {isSorted === "asc" ? (
@@ -116,14 +120,18 @@ export const securityEventColumns: ColumnDef<SecurityEventLog>[] = [
         </Button>
       );
     },
-    cell: ({ row }) => <span>{row.getValue<number>("suspicion_score")}</span>,
+    cell: ({ row }) => (
+      <span className="font-mono text-sm text-foreground">
+        {row.getValue<number>("suspicion_score")}
+      </span>
+    ),
   },
   {
     accessorKey: "query_template",
     header: "Query",
     cell: ({ row }) => {
       const query = row.getValue<string | null>("query_template");
-      return <span className="block max-w-xl truncate">{query ?? ""}</span>;
+      return <span className="block max-w-xl truncate text-sm text-foreground/80">{query ?? ""}</span>;
     },
   },
 ];

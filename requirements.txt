@@ -1,0 +1,5 @@
+# SQLock Security System Dependencies
+# Install with: pip install -r requirements.txt
+
+mysql-connector-python==9.5.0
+
