@@ -2,13 +2,13 @@
 
 **`DROP` threats, not tables.**
 
-## 🚀 Overview
+## Overview
 
 SQLock is a web-based security demonstration system designed to detect and prevent SQL injection (SQLi) attacks. This project was created for the CS4389 Data and Applications Security course at The University of Texas at Dallas.
 
 The primary goal is to create a teaching/proof-of-concept application that demonstrates secure database interaction patterns. The system uses a rule-based detection engine to analyze SQL queries at the application layer, logs all suspicious activity to a MySQL database, and provides a real-time dashboard for security event analysis.
 
-## 🛠️ Features
+## Features
 
  **SQL Injection Detection**: Client-side rule-based detector analyzes queries for suspicious patterns before execution
 
@@ -26,8 +26,15 @@ The primary goal is to create a teaching/proof-of-concept application that demon
    - SQL comments (`--`, `/*`)
    - `UNION` and `DROP` statements
    - Suspicious operator combinations
+SQL Injection Prevention: Actively detects and mitigates SQLi attacks.
 
-## 📦 Installation
+Advanced Logging: Logs user inputs, including timestamps, user information, and the raw query string, to trace potential attacks.
+
+Pattern Analysis: Includes tools to analyze logs to identify probable SQL injection patterns.
+
+Rule-Based Detection: Uses a set of detection rules to identify common SQLi payloads, such as tautologies (`or 1=1`), SQL comments (`--`, `/*`), `UNION` `SELECT` queries, and more.
+
+## Installation
 
 ### Prerequisites
 
@@ -86,7 +93,7 @@ The primary goal is to create a teaching/proof-of-concept application that demon
     DATABASE_URL="mysql://username:password@localhost:3306/sqlock_db"
     ```
 
-## ⚙️ Usage
+## Usage
 
 ### Running the Application
 
@@ -119,6 +126,7 @@ The application will be available at `http://localhost:3000`
 ### Detection Logic
 
 The application uses a client-side rule-based detection engine that analyzes queries for suspicious patterns:
+Current project organization:
 
 - **Block (Score 90)**: Queries containing `DROP`, `UNION`, `OR 1=1`, or SQL comments (`--`)
 - **Challenge (Score 55)**: Queries with suspicious combinations of `OR` and `=` operators
@@ -188,6 +196,16 @@ CREATE TABLE Security_Event (
     suspicion_score INT NOT NULL,       -- 0-100 risk score
     query_template TEXT                  -- The query that was analyzed
 );
+SQLock/
+├── Mitigation-SRC              # Main security module
+├── pseudo_log.txt              # Security event logging
+├── tests/                      # All testing files
+│   ├── setup_test_db.py        # Database initialization
+│   ├── test_comprehensive_security.py  # Full test suite
+│   ├── demo_sqllock.py         # Interactive demo
+│   └── README.md               # Test documentation
+├── sqlock/                     # Next.js web interface
+└── README.md                   # This file
 ```
 
 ## 🧠 Technologies Used
@@ -239,6 +257,6 @@ This project is maintained by the following group members:
 - Caiyun (Katie) Huang
     
 
-## 🌟 Acknowledgments
+## Acknowledgments
 
 - This project was developed for the **CS4389 Data and Applications Security** course at **The University of Texas at Dallas - Richardson**.
