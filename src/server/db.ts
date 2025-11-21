@@ -19,10 +19,4 @@ export async function query<T extends RowDataPacket[] | ResultSetHeader>(
   return rows;
 }
 
-export async function querySingle<T extends RowDataPacket>(
-  sql: string,
-  params: QueryParams = [],
-): Promise<T | undefined> {
-  const rows = await query<T[]>(sql, params);
-  return rows[0];
-}
+

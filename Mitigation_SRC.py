@@ -242,27 +242,44 @@ def detect_sql_injection_patterns(input_string):
     detected_patterns = []
     input_lower = input_string.lower()
 
+    # Check if the input appears to be a complete SQL statement (starts with a command)
+    # This helps distinguish between a full query analysis (where SELECT is expected)
+    # and a raw input analysis (where SELECT is suspicious).
+    is_full_statement = re.match(r"^\s*(select|insert|update|delete|create|alter|drop)\b", input_lower)
+
     # 1. Context-Aware Checks (Improvement 3) & Weighted Scoring (Improvement 1)
     # Single quote is only suspicious if followed by SQL keywords or operators
     # Regex explanation: ' followed by optional space, then OR, AND, ;, --, #, or /*
-    if re.search(r"'\s*(or|and|;|--|#|/\*)", input_lower):
-        score += 50
-        detected_patterns.append("Suspicious single quote usage")
-    elif "'" in input_string:
-        # Low score for just a quote (e.g. O'Reilly)
-        score += 5
+    # We only apply this if it's NOT a full statement, because valid SQL often contains ' followed by OR/AND.
+    if not is_full_statement:
+        # High score for ' OR / ' AND which is a very common injection starter
+        if re.search(r"'\s*(or|and)\b", input_lower):
+            score += 85
+            detected_patterns.append("Suspicious single quote with logic operator")
+        elif re.search(r"'\s*(;|--|#|/\*)", input_lower):
+            score += 50
+            detected_patterns.append("Suspicious single quote usage")
+        elif "'" in input_string:
+            # Low score for just a quote (e.g. O'Reilly)
+            score += 5
     
     # 2. Regex Patterns (Improvement 2)
     regex_patterns = [
         (r"\b(union\s+select|union\s+all\s+select)\b", 100, "UNION-based injection"),
-        (r"\b(select\s+.*\s+from)\b", 80, "Direct data extraction"),
-        (r"\b(insert\s+into|update\s+.*set|delete\s+from)\b", 90, "Data modification attempt"),
+        # (r"\b(select\s+.*\s+from)\b", 80, "Direct data extraction"), # Moved below
+        # (r"\b(insert\s+into|update\s+.*set|delete\s+from)\b", 90, "Data modification attempt"), # Moved below
         (r"\b(drop\s+table|alter\s+table|truncate\s+table)\b", 100, "Destructive command"),
         (r"\b(exec|execute)\s*\(", 90, "Code execution"),
         (r"(\b(or|and)\b\s*[\w']+\s*=\s*[\w']+)", 80, "Tautology (OR 1=1)"), # Matches "OR 1=1", "OR 'a'='a'"
         (r"(--|#|\/\*)", 30, "SQL Comment"), # Comments are suspicious but maybe not instant block alone
         (r";", 30, "Statement stacking"),
     ]
+
+    # Only flag standard SQL commands if the input doesn't start with them.
+    # If it starts with them, it's likely a full query being analyzed, so the command itself is not the injection.
+    if not is_full_statement:
+        regex_patterns.append((r"\b(select\s+.*\s+from)\b", 80, "Direct data extraction"))
+        regex_patterns.append((r"\b(insert\s+into|update\s+.*set|delete\s+from)\b", 90, "Data modification attempt"))
 
     for pattern, weight, desc in regex_patterns:
         if re.search(pattern, input_lower):
@@ -309,7 +326,8 @@ def detect_sql_injection_patterns(input_string):
             detected_patterns.append(f"{description} (Dictionary Match)")
 
     # 4. Multiple suspicious characters (from original code)
-    if len([c for c in input_string if c in "';\"--"]) > 3: # Increased threshold slightly
+    # Only apply to raw input, as valid SQL statements naturally contain many quotes/semicolons
+    if not is_full_statement and len([c for c in input_string if c in "';\"--"]) > 3: # Increased threshold slightly
         score += 20
         detected_patterns.append("Multiple suspicious characters")
 

@@ -5,7 +5,6 @@ import type { ColumnDef } from "@tanstack/react-table";
 import { ArrowDown, ArrowUp, ArrowUpDown } from "lucide-react";
 
 import { Button } from "~/components/ui/button";
-import { Textarea } from "~/components/ui/textarea";
 import { Toggle } from "~/components/ui/toggle";
 import { DataTable } from "~/components/data-table";
 
@@ -172,9 +171,21 @@ export default function InputPage() {
     }
   }
 
-  const runPipeline = async (sql: string) => {
-    const trimmed = sql.trim();
-    if (!trimmed) return;
+  const runPipeline = async (input: string) => {
+    const trimmedInput = input.trim();
+    if (!trimmedInput) return;
+
+    // Determine if input is a full query or a search term
+    const isFullQuery = trimmedInput.toLowerCase().startsWith("select");
+    
+    let executionSql = trimmedInput;
+    // If it's not a full query, treat it as a search term and construct the SQL
+    if (!isFullQuery) {
+      executionSql = `SELECT * FROM employee_info WHERE first_name LIKE '%${trimmedInput}%' OR last_name LIKE '%${trimmedInput}%'`;
+    }
+    
+    // We always analyze the raw input for mitigation to avoid false positives from our own constructed SQL
+    const mitigationInput = trimmedInput;
 
     setRunning(true);
     setServerRows(undefined);
@@ -183,30 +194,50 @@ export default function InputPage() {
     setMitigationError(undefined);
 
     try {
-      let detection: DetectionResult = { ...detectQuery(trimmed), engine: "Local heuristic" };
+      let detection: DetectionResult = { ...detectQuery(mitigationInput), engine: "Local heuristic" };
       setResult(detection);
 
-      const mitigation = await fetchMitigation(trimmed);
+      const mitigation = await fetchMitigation(mitigationInput);
       if (mitigation) {
         detection = mitigation;
+        // If the score is 0 and allowed, explicitly label it as a normal search
+        if (detection.score === 0 && detection.decision === "allow") {
+            detection.pattern = "Normal employee search";
+        }
         setResult(detection);
       }
 
-      setLastQuery(trimmed);
+      // If it's a search term and deemed safe, escape quotes to prevent syntax errors (e.g. O'Reilly)
+      // If it's malicious, we leave it raw to allow the simulation of SQL injection.
+      if (!isFullQuery && !detection.malicious) {
+          const escaped = trimmedInput.replace(/'/g, "''");
+          executionSql = `SELECT * FROM employee_info WHERE first_name LIKE '%${escaped}%' OR last_name LIKE '%${escaped}%'`;
+      }
+
+      setLastQuery(executionSql);
 
       // Log the security event to the database
       await logSecurityEvent(
         detection.decision ?? "unknown",
         detection.score ?? 0,
-        trimmed
+        executionSql
       );
 
-      const lower = trimmed.toLowerCase();
-      const isSelect = lower.startsWith("select") && lower.includes(" from ");
+      // Check if we should block execution based on mitigation result and enforcement setting
+      const shouldBlock = enforceMitigation && detection.decision === "block";
+
+      if (shouldBlock) {
+          setServerRows(undefined);
+          setInfoMessage("Query blocked by mitigation system.");
+          return; // Stop execution
+      }
+
+      const lowerExec = executionSql.toLowerCase();
+      const isSelect = lowerExec.startsWith("select") && lowerExec.includes(" from ");
 
       if (isSelect) {
         try {
-          const data = await executeQuery(trimmed);
+          const data = await executeQuery(executionSql);
           const records = data.rows.map((row) => {
             const record: TableRecord = {};
             data.columns.forEach((col, index) => {
@@ -235,13 +266,12 @@ export default function InputPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!query.trim()) return;
     await runPipeline(query);
-    setQuery("");
   };
 
   const runSample = async () => {
-    const sample = "SELECT employee_id, first_name, last_name, email FROM employee_info LIMIT 10";
+    const sample = "Smith";
+    setQuery(sample);
     await runPipeline(sample);
   };
 
@@ -298,9 +328,9 @@ export default function InputPage() {
     <div className="space-y-10">
         <div className="rounded-[2.5rem] border border-white/40 p-8 shadow-lg backdrop-blur-2xl dark:border-white/10">
           <p className="text-xs uppercase tracking-[0.4em] text-muted-foreground">Simulator</p>
-          <h1 className="mt-3 text-3xl font-semibold text-foreground sm:text-4xl">Query Input</h1>
+          <h1 className="mt-3 text-3xl font-semibold text-foreground sm:text-4xl">Employee Directory</h1>
           <p className="mt-3 max-w-2xl text-sm text-muted-foreground">
-            Enter SQL statements to test the detection system. The system will analyze the query and log the results.
+            Search for an employee by name. The system will analyze the underlying query for security threats.
           </p>
         </div>
 
@@ -308,12 +338,12 @@ export default function InputPage() {
           <div className="rounded-[2rem] border border-white/40 p-6 shadow-md backdrop-blur-xl dark:border-white/10">
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="mb-2 block text-sm font-medium text-foreground">Search Box</label>
-                <Textarea
+                <label className="mb-2 block text-sm font-medium text-foreground">Search Employee</label>
+                <input
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
-                  className="h-48 rounded-3xl border-white/30 bg-white/50 text-base shadow-inner shadow-white/20 placeholder:text-muted-foreground/60 dark:border-white/10 dark:bg-white/5"
-                  placeholder="Search for an employee... Ex: John Smith"
+                  className="flex h-14 w-full rounded-full border border-white/30 bg-white/50 px-6 text-base shadow-inner shadow-white/20 placeholder:text-muted-foreground/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/10 dark:bg-white/5"
+                  placeholder="Search by name (e.g. John)..."
                 />
               </div>
 
@@ -323,7 +353,7 @@ export default function InputPage() {
                   disabled={running}
                   className="rounded-full bg-gradient-to-r from-primary via-sky-400 to-indigo-500 px-6"
                 >
-                  {running ? "Running..." : "Run query"}
+                  {running ? "Searching..." : "Search"}
                 </Button>
 
                 <Button
