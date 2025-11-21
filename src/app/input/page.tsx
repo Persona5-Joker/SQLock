@@ -6,6 +6,7 @@ import { ArrowDown, ArrowUp, ArrowUpDown } from "lucide-react";
 
 import { Button } from "~/components/ui/button";
 import { Textarea } from "~/components/ui/textarea";
+import { Toggle } from "~/components/ui/toggle";
 import { DataTable } from "~/components/data-table";
 
 type DetectionResult = {
@@ -85,6 +86,7 @@ export default function InputPage() {
     "Run a query to see output here.",
   );
   const [mitigationError, setMitigationError] = useState<string | undefined>(undefined);
+  const [enforceMitigation, setEnforceMitigation] = useState(false);
 
   // Simple local detector to replace removed server/trpc
   function detectQuery(q: string): DetectionResult {
@@ -285,8 +287,15 @@ export default function InputPage() {
   const tableData = serverRows?.rows ?? [];
   const tableEmptyMessage = infoMessage ?? (serverRows ? "No rows returned." : "Run a query to see output here.");
 
-    return (
-      <div className="space-y-10">
+  const isBlocked = result.decision === "block";
+  const showResults = !enforceMitigation || !isBlocked;
+  const finalTableData = showResults ? tableData : [];
+  const finalEmptyMessage = !showResults
+    ? "Query blocked by mitigation system."
+    : tableEmptyMessage;
+
+  return (
+    <div className="space-y-10">
         <div className="rounded-[2.5rem] border border-white/40 p-8 shadow-lg backdrop-blur-2xl dark:border-white/10">
           <p className="text-xs uppercase tracking-[0.4em] text-muted-foreground">Simulator</p>
           <h1 className="mt-3 text-3xl font-semibold text-foreground sm:text-4xl">Query Input</h1>
@@ -392,13 +401,29 @@ export default function InputPage() {
 
         <div className="rounded-[2rem] border border-white/40 p-6 shadow-md backdrop-blur-xl dark:border-white/10">
           <div className="mb-4 flex items-center justify-between">
-             <h2 className="text-lg font-semibold">Query Results</h2>
-             <span className="text-xs text-muted-foreground">{tableData.length} row(s)</span>
+            <h2 className="text-lg font-semibold">Query Results</h2>
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground">Enforce Mitigation</span>
+                <Toggle
+                  pressed={enforceMitigation}
+                  onPressedChange={setEnforceMitigation}
+                  variant="outline"
+                  className="h-6 px-2 text-xs"
+                  aria-label="Toggle mitigation enforcement"
+                >
+                  {enforceMitigation ? "ON" : "OFF"}
+                </Toggle>
+              </div>
+              <span className="text-xs text-muted-foreground">
+                {finalTableData.length} row(s)
+              </span>
+            </div>
           </div>
           <DataTable<TableRecord>
             columns={tableColumns}
-            data={tableData}
-            emptyMessage={tableEmptyMessage}
+            data={finalTableData}
+            emptyMessage={finalEmptyMessage}
             className="rounded-[1.5rem] border border-white/20 bg-white/60 p-4 shadow-sm backdrop-blur-lg dark:bg-white/5"
           />
         </div>
