@@ -36,7 +36,7 @@ export default async function Home() {
             <span className="glow-text">SQL Injection Detection</span> & Mitigation System
           </h1>
           <p className="inline-flex items-center justify-center rounded-full border border-white/30 px-4 py-1 text-xs font-semibold uppercase tracking-[0.4em] text-foreground/70">
-            SQLock: Database Security Project
+            SQLock: DROP tables, not security!
           </p>
           <p className="mx-auto max-w-2xl text-base text-muted-foreground sm:text-lg">
             A demonstration of SQL injection detection techniques. This project analyzes SQL queries in real-time to identify and mitigate potential security threats using pattern matching and heuristic analysis.

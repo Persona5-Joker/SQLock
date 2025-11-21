@@ -4,6 +4,7 @@ import json
 import mysql.connector
 from datetime import datetime, timedelta
 import hashlib
+import re
 
 # TODO: Fill this dictionary with your database connection details.
 # It is best practice to load these from a separate config file or environment variables.
@@ -16,6 +17,24 @@ DB_CONFIG = {
     'autocommit': True,
     'connect_timeout': 10
 }
+
+def log_security_event(decision, score, query_text):
+    """Log security event to the database."""
+    try:
+        connection = mysql.connector.connect(**DB_CONFIG)
+        cursor = connection.cursor()
+        
+        query = """
+            INSERT INTO Logs (decision, suspicion_score, query_template)
+            VALUES (%s, %s, %s)
+        """
+        cursor.execute(query, (decision, score, query_text))
+        connection.commit()
+        
+        cursor.close()
+        connection.close()
+    except mysql.connector.Error as error:
+        log_suspicious_activity(f"Database error logging event: {error}")
 
 def log_suspicious_activity(bad_input):
     """
@@ -211,10 +230,6 @@ def apply_immediate_sql_lockout(username, detected_pattern):
     except mysql.connector.Error as error:
         log_suspicious_activity(f"Database error applying immediate lockout: {error}")
 
-import re
-
-# ...existing code...
-
 def detect_sql_injection_patterns(input_string):
     """
     Comprehensive SQL injection pattern detection.
@@ -348,9 +363,16 @@ def authenticate_user(username, password):
         return None
     
     # Feature 2: SQL Injection Detection (Faizan)
-    username_malicious, username_pattern, _ = detect_sql_injection_patterns(username)
-    password_malicious, password_pattern, _ = detect_sql_injection_patterns(password)
+    username_malicious, username_pattern, username_score = detect_sql_injection_patterns(username)
+    password_malicious, password_pattern, password_score = detect_sql_injection_patterns(password)
     
+    # Log the security check to the database
+    log_security_event(
+        "block" if username_malicious else "allow",
+        username_score,
+        f"Auth Username: {username}"
+    )
+
     if username_malicious or password_malicious:
         detected_pattern = username_pattern if username_malicious else password_pattern
         apply_immediate_sql_lockout(username, detected_pattern)

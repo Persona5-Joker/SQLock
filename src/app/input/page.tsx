@@ -295,7 +295,7 @@ export default function InputPage() {
           </p>
         </div>
 
-        <div className="grid gap-6 lg:grid-cols-[1fr_1.1fr]">
+        <div className="grid gap-6 lg:grid-cols-2">
           <div className="rounded-[2rem] border border-white/40 p-6 shadow-md backdrop-blur-xl dark:border-white/10">
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
@@ -373,13 +373,13 @@ export default function InputPage() {
             </div>
 
             {serverError && (
-              <div className="mb-3 rounded-2xl border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">
+              <div className="mb-3 rounded-2xl border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive break-words whitespace-pre-wrap">
                 Server error: {serverError}
               </div>
             )}
 
             {mitigationError && (
-              <div className="mb-3 rounded-2xl border border-amber-400/70 bg-amber-100/40 p-3 text-sm text-amber-900 dark:border-amber-200/30 dark:bg-amber-500/10 dark:text-amber-100">
+              <div className="mb-3 rounded-2xl border border-amber-400/70 bg-amber-100/40 p-3 text-sm text-amber-900 dark:border-amber-200/30 dark:bg-amber-500/10 dark:text-amber-100 break-words whitespace-pre-wrap">
                 Mitigation warning: {mitigationError}
               </div>
             )}
@@ -387,16 +387,20 @@ export default function InputPage() {
             {(!serverRows || tableData.length === 0) && infoMessage && (
               <p className="text-sm text-muted-foreground">{infoMessage}</p>
             )}
-
-            <div className="mt-4">
-              <DataTable<TableRecord>
-                columns={tableColumns}
-                data={tableData}
-                emptyMessage={tableEmptyMessage}
-                className="rounded-[1.5rem] border border-white/20 bg-white/60 p-4 shadow-sm backdrop-blur-lg dark:bg-white/5"
-              />
-            </div>
           </div>
+        </div>
+
+        <div className="rounded-[2rem] border border-white/40 p-6 shadow-md backdrop-blur-xl dark:border-white/10">
+          <div className="mb-4 flex items-center justify-between">
+             <h2 className="text-lg font-semibold">Query Results</h2>
+             <span className="text-xs text-muted-foreground">{tableData.length} row(s)</span>
+          </div>
+          <DataTable<TableRecord>
+            columns={tableColumns}
+            data={tableData}
+            emptyMessage={tableEmptyMessage}
+            className="rounded-[1.5rem] border border-white/20 bg-white/60 p-4 shadow-sm backdrop-blur-lg dark:bg-white/5"
+          />
         </div>
       </div>
     );

@@ -12,9 +12,9 @@ export type SecurityEventRow = RowDataPacket & {
 
 export async function getRecentSecurityEvents(limit = 100): Promise<SecurityEventRow[]> {
   const sql = `
-    SELECT id, ts_utc, decision, suspicion_score, query_template
-    FROM Security_Event
-    ORDER BY ts_utc DESC
+    SELECT id, created_at as ts_utc, decision, suspicion_score, query_template
+    FROM Logs
+    ORDER BY created_at DESC
     LIMIT ?
   `;
   const rows = await query<SecurityEventRow[]>(sql, [limit]);
@@ -23,10 +23,10 @@ export async function getRecentSecurityEvents(limit = 100): Promise<SecurityEven
 
 export async function getFlaggedSecurityEvents(limit = 50): Promise<SecurityEventRow[]> {
   const sql = `
-    SELECT id, ts_utc, decision, suspicion_score, query_template
-    FROM Security_Event
+    SELECT id, created_at as ts_utc, decision, suspicion_score, query_template
+    FROM Logs
     WHERE decision IN ('block', 'challenge')
-    ORDER BY ts_utc DESC
+    ORDER BY created_at DESC
     LIMIT ?
   `;
   const rows = await query<SecurityEventRow[]>(sql, [limit]);
