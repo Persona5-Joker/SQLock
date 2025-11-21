@@ -308,12 +308,12 @@ export default function InputPage() {
           <div className="rounded-[2rem] border border-white/40 p-6 shadow-md backdrop-blur-xl dark:border-white/10">
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="mb-2 block text-sm font-medium text-foreground">SQL Input</label>
+                <label className="mb-2 block text-sm font-medium text-foreground">Search Box</label>
                 <Textarea
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   className="h-48 rounded-3xl border-white/30 bg-white/50 text-base shadow-inner shadow-white/20 placeholder:text-muted-foreground/60 dark:border-white/10 dark:bg-white/5"
-                  placeholder="SELECT employee_id, email FROM employee_info WHERE ..."
+                  placeholder="Search for an employee... Ex: John Smith"
                 />
               </div>
 

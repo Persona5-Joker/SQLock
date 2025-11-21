@@ -37,15 +37,13 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" suppressHydrationWarning className={geist.variable}>
-      <head>
+    <html lang="en" className={geist.variable}>
+      <body className="min-h-screen antialiased">
         <Script
           src="https://tweakcn.com/live-preview.min.js"
-          strategy="afterInteractive"
+          strategy="lazyOnload"
           crossOrigin="anonymous"
         />
-      </head>
-      <body className="min-h-screen antialiased" suppressHydrationWarning>
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
