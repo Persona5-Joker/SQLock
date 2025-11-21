@@ -1,4 +1,4 @@
-"use client";
+ "use client";
 
 import { useMemo, useState } from "react";
 import type { ColumnDef } from "@tanstack/react-table";
@@ -175,17 +175,18 @@ export default function InputPage() {
     const trimmedInput = input.trim();
     if (!trimmedInput) return;
 
+    // Normalize smart quotes to straight quotes so detection/SQL behave consistently
+    const normalizedInput = trimmedInput
+      .replace(/[‘’]/g, "'")
+      .replace(/[“”]/g, '"');
+
     // Determine if input is a full query or a search term
-    const isFullQuery = trimmedInput.toLowerCase().startsWith("select");
+    const isFullQuery = normalizedInput.toLowerCase().startsWith("select");
     
-    let executionSql = trimmedInput;
-    // If it's not a full query, treat it as a search term and construct the SQL
-    if (!isFullQuery) {
-      executionSql = `SELECT * FROM employee_info WHERE first_name LIKE '%${trimmedInput}%' OR last_name LIKE '%${trimmedInput}%'`;
-    }
+    let executionSql = normalizedInput;
     
-    // We always analyze the raw input for mitigation to avoid false positives from our own constructed SQL
-    const mitigationInput = trimmedInput;
+    // We always analyze the normalized input for mitigation to avoid false positives from our own constructed SQL
+    const mitigationInput = normalizedInput;
 
     setRunning(true);
     setServerRows(undefined);
@@ -207,11 +208,17 @@ export default function InputPage() {
         setResult(detection);
       }
 
-      // If it's a search term and deemed safe, escape quotes to prevent syntax errors (e.g. O'Reilly)
-      // If it's malicious, we leave it raw to allow the simulation of SQL injection.
-      if (!isFullQuery && !detection.malicious) {
-          const escaped = trimmedInput.replace(/'/g, "''");
+      // Construct the SQL query
+      if (!isFullQuery) {
+        if (detection.malicious) {
+          // For malicious input, allow SQL injection by not escaping
+          // The raw input breaks out of the LIKE clause
+          executionSql = `SELECT * FROM employee_info WHERE first_name LIKE '%${normalizedInput}%' OR last_name LIKE '%${normalizedInput}%'`;
+        } else {
+          // For safe input, escape quotes to prevent syntax errors (e.g. O'Reilly)
+          const escaped = normalizedInput.replace(/'/g, "''");
           executionSql = `SELECT * FROM employee_info WHERE first_name LIKE '%${escaped}%' OR last_name LIKE '%${escaped}%'`;
+        }
       }
 
       setLastQuery(executionSql);

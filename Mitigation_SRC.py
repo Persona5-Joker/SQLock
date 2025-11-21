@@ -18,6 +18,17 @@ DB_CONFIG = {
     'connect_timeout': 10
 }
 
+def normalize_quotes(value):
+    """Convert smart quotes to straight quotes for consistent analysis."""
+    if not isinstance(value, str):
+        return value
+    return (
+        value.replace("‘", "'")
+        .replace("’", "'")
+        .replace("“", '"')
+        .replace("”", '"')
+    )
+
 def log_security_event(decision, score, query_text):
     """Log security event to the database."""
     try:
@@ -238,9 +249,15 @@ def detect_sql_injection_patterns(input_string):
     if not input_string or not isinstance(input_string, str):
         return False, None, 0
     
+    input_string = normalize_quotes(input_string)
     score = 0
     detected_patterns = []
     input_lower = input_string.lower()
+    
+    # Quick check for obvious SQL injection patterns first
+    if "' or '" in input_lower or "' or 1" in input_lower or "' and '" in input_lower:
+        score += 100
+        detected_patterns.append("SQL injection pattern detected")
 
     # Check if the input appears to be a complete SQL statement (starts with a command)
     # This helps distinguish between a full query analysis (where SELECT is expected)
@@ -253,8 +270,9 @@ def detect_sql_injection_patterns(input_string):
     # We only apply this if it's NOT a full statement, because valid SQL often contains ' followed by OR/AND.
     if not is_full_statement:
         # High score for ' OR / ' AND which is a very common injection starter
-        if re.search(r"'\s*(or|and)\b", input_lower):
-            score += 85
+        # Match patterns like: ' OR, ' AND, 'OR, 'AND (with or without space)
+        if re.search(r"'\s*(or|and)\s", input_lower) or re.search(r"'\s*(or|and)\b", input_lower):
+            score += 90
             detected_patterns.append("Suspicious single quote with logic operator")
         elif re.search(r"'\s*(;|--|#|/\*)", input_lower):
             score += 50
@@ -270,7 +288,7 @@ def detect_sql_injection_patterns(input_string):
         # (r"\b(insert\s+into|update\s+.*set|delete\s+from)\b", 90, "Data modification attempt"), # Moved below
         (r"\b(drop\s+table|alter\s+table|truncate\s+table)\b", 100, "Destructive command"),
         (r"\b(exec|execute)\s*\(", 90, "Code execution"),
-        (r"(\b(or|and)\b\s*[\w']+\s*=\s*[\w']+)", 80, "Tautology (OR 1=1)"), # Matches "OR 1=1", "OR 'a'='a'"
+        (r"(\b(or|and)\b\s*['\"]?\w+['\"]?\s*=\s*['\"]?\w+['\"]?)", 80, "Tautology (OR 1=1)"), # Matches "OR 1=1", "OR 'a'='a'", "OR '1'='1'"
         (r"(--|#|\/\*)", 30, "SQL Comment"), # Comments are suspicious but maybe not instant block alone
         (r";", 30, "Statement stacking"),
     ]
@@ -294,9 +312,13 @@ def detect_sql_injection_patterns(input_string):
     basic_sqli_dictionary = {
         "1=1": "Tautology injection",
         "1'='1": "Quote tautology",
+        "'1'='1": "Quote tautology variant",
         "admin'--": "Admin bypass attempt",
         "' or '1'='1": "Classic OR injection",
-        "' or 1=1--": "Numeric OR injection",
+        " or '1'='1": "Classic OR injection variant",
+        "or '1'='1": "Classic OR injection variant 2",
+        "' or 1=1": "Numeric OR injection",
+        "' or 1=1--": "Numeric OR injection with comment",
         "'; drop table": "Table drop attempt",
         "'; delete from": "Delete injection",
         "xp_": "Extended procedure",
@@ -473,7 +495,8 @@ def _run_cli_interface() -> None:
 
     args = parser.parse_args()
 
-    malicious, pattern, score = detect_sql_injection_patterns(args.query)
+    normalized_query = normalize_quotes(args.query)
+    malicious, pattern, score = detect_sql_injection_patterns(normalized_query)
     lockout_applied = False
 
     if malicious and args.apply_lockout and args.username:
