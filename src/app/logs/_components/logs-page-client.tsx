@@ -12,6 +12,8 @@ type AnalyzeResponse = {
   incidents_found: number;
   incidents_saved: number;
   error?: string;
+  csvBase64?: string | null;
+  csvFileName?: string | null;
 };
 
 interface LogsPageClientProps {
@@ -24,6 +26,27 @@ export default function LogsPageClient({ initialRows, initialError }: LogsPageCl
   const [loadError] = useState<string | null>(initialError);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisResult, setAnalysisResult] = useState<string | null>(null);
+
+  const triggerCsvDownload = (base64Data: string, fileName?: string | null) => {
+    try {
+      const byteCharacters = atob(base64Data);
+      const byteNumbers = new Array(byteCharacters.length);
+      for (let i = 0; i < byteCharacters.length; i += 1) {
+        byteNumbers[i] = byteCharacters.charCodeAt(i);
+      }
+      const blob = new Blob([new Uint8Array(byteNumbers)], { type: "text/csv;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = fileName ?? "sqli_incidents.csv";
+      document.body.appendChild(anchor);
+      anchor.click();
+      document.body.removeChild(anchor);
+      URL.revokeObjectURL(url);
+    } catch (downloadError) {
+      console.error("Unable to trigger CSV download", downloadError);
+    }
+  };
 
   async function handleAnalyzeLogs() {
     setIsAnalyzing(true);
@@ -44,11 +67,9 @@ export default function LogsPageClient({ initialRows, initialError }: LogsPageCl
         setAnalysisResult(
           `✅ Analysis complete! Found ${data.incidents_found} suspicious entries, saved ${data.incidents_saved} to database.`
         );
-        
-        // Refresh the page data
-        setTimeout(() => {
-          window.location.reload();
-        }, 2000);
+        if (data.csvBase64) {
+          triggerCsvDownload(data.csvBase64, data.csvFileName);
+        }
       } else {
         const errorMessage = data.error ?? 'Analysis failed without additional context.';
         setAnalysisResult(`❌ Analysis failed: ${errorMessage}`);
@@ -62,12 +83,12 @@ export default function LogsPageClient({ initialRows, initialError }: LogsPageCl
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-4 rounded-[2.5rem] border border-white/30 p-6 shadow-lg backdrop-blur-2xl dark:border-white/10 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-4 rounded-[2.5rem] border border-white/30 p-6 shadow-lg backdrop-blur-2xl dark:border-white/10 sm:flex-col sm:items-start sm:justify-between md:flex-row md:items-center">
         <div>
           <p className="text-xs uppercase tracking-[0.4em] text-muted-foreground">Logs</p>
-          <h1 className="mt-2 text-3xl font-semibold text-foreground">System intelligence</h1>
+          <h1 className="mt-2 text-3xl font-semibold text-foreground">Security Logs</h1>
           <p className="text-sm text-muted-foreground">
-            Live Security_Event records, rendered with pill filters and clean typography for at-a-glance context.
+            A record of all processed queries, including timestamps, decisions, and suspicion scores.
           </p>
         </div>
         <Button

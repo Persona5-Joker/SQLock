@@ -1,0 +1,39 @@
+-- 1. Safe Query (Should be ALLOWED)
+-- A standard query fetching data with a specific ID.
+SELECT * FROM employee_info WHERE employee_id = 100
+
+-- 2. Classic SQL Injection (Should be BLOCKED)
+-- Uses the "OR 1=1" tautology to bypass authentication or fetch all records.
+SELECT * FROM employee_info WHERE first_name = 'admin' OR 1=1
+
+-- 3. UNION Attack (Should be BLOCKED)
+-- Attempts to combine results from the 'users' table into the current query results.
+SELECT first_name, last_name FROM employee_info UNION SELECT username, password FROM users
+
+-- 4. Comment Injection (Should be BLOCKED)
+-- Uses "--" to comment out the rest of the query, often used to bypass password checks.
+SELECT * FROM employee_info WHERE email = 'admin@example.com' --' AND password = 'guest'
+
+-- 5. Destructive Command (Should be BLOCKED - Instant Dictionary Block)
+-- Attempts to delete the entire table.
+DROP TABLE employee_info
+
+-- 6. Stacked Queries (Should be BLOCKED)
+-- Uses a semicolon ";" to chain a second malicious update command.
+SELECT * FROM employee_info; UPDATE employee_info SET Salary = 999999 WHERE employee_id = 100
+
+-- 7. Command Execution (Should be BLOCKED - Instant Dictionary Block)
+-- Attempts to execute system-level commands (specific to SQL Server, but flagged by dictionary).
+EXEC xp_cmdshell 'dir'
+
+-- 8. Truncate Table (Should be BLOCKED - Instant Dictionary Block)
+-- Attempts to empty a table completely.
+TRUNCATE TABLE employee_info
+
+-- 9. Context-Aware Suspicious Quote (Should be BLOCKED)
+-- Uses a single quote followed by "OR" to trigger the context-aware regex.
+SELECT * FROM employee_info WHERE last_name = 'Smith' OR '1'='1'
+
+-- 10. Safe Query with Quote (Should be ALLOWED or Low Score)
+-- A legitimate name containing a single quote (O'Reilly). The system should distinguish this from an attack.
+SELECT * FROM employee_info WHERE last_name = 'O''Reilly'

@@ -39,7 +39,7 @@ export async function logSecurityEvent(
   queryTemplate: string,
 ): Promise<void> {
   const sql = `
-    INSERT INTO Security_Event (decision, suspicion_score, query_template)
+    INSERT INTO Logs (decision, suspicion_score, query_template)
     VALUES (?, ?, ?)
   `;
   await query(sql, [decision, suspicionScore, queryTemplate]);

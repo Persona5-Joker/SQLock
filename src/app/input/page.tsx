@@ -26,6 +26,7 @@ type MitigationResponse = {
   success?: boolean;
   malicious?: boolean;
   pattern?: string | null;
+  score?: number;
   lockout_applied?: boolean;
   error?: string;
 };
@@ -156,7 +157,7 @@ export default function InputPage() {
 
       return {
         decision: payload.malicious ? "block" : "allow",
-        score: payload.malicious ? 95 : 5,
+        score: payload.score ?? (payload.malicious ? 95 : 5),
         pattern: payload.pattern ?? null,
         engine: "Mitigation_SRC",
         lockoutApplied: payload.lockout_applied ?? false,
@@ -180,7 +181,7 @@ export default function InputPage() {
     setMitigationError(undefined);
 
     try {
-      let detection = { ...detectQuery(trimmed), engine: "Local heuristic" };
+      let detection: DetectionResult = { ...detectQuery(trimmed), engine: "Local heuristic" };
       setResult(detection);
 
       const mitigation = await fetchMitigation(trimmed);
@@ -219,11 +220,11 @@ export default function InputPage() {
         } catch (err) {
           console.error("executeQuery failed", err);
           setServerError(err instanceof Error ? err.message : String(err));
-          setInfoMessage("Unable to retrieve live results.");
+          setInfoMessage("Unable to retrieve query results.");
         }
       } else {
         setServerRows(undefined);
-        setInfoMessage("Live previews are available for SELECT queries only.");
+        setInfoMessage("Result previews are available for SELECT queries only.");
       }
     } finally {
       setRunning(false);
@@ -288,10 +289,9 @@ export default function InputPage() {
       <div className="space-y-10">
         <div className="rounded-[2.5rem] border border-white/40 p-8 shadow-lg backdrop-blur-2xl dark:border-white/10">
           <p className="text-xs uppercase tracking-[0.4em] text-muted-foreground">Simulator</p>
-          <h1 className="mt-3 text-3xl font-semibold text-foreground sm:text-4xl">Input console</h1>
+          <h1 className="mt-3 text-3xl font-semibold text-foreground sm:text-4xl">Query Input</h1>
           <p className="mt-3 max-w-2xl text-sm text-muted-foreground">
-            Mirror the polish of an Apple lab: enter SQL statements, watch the detector respond in real time, and ship
-            events into the telemetry log with a single tap.
+            Enter SQL statements to test the detection system. The system will analyze the query and log the results.
           </p>
         </div>
 
@@ -344,11 +344,11 @@ export default function InputPage() {
           <div className="rounded-[2rem] border border-white/40 p-6 shadow-md backdrop-blur-xl dark:border-white/10">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-semibold text-foreground">Query Output</p>
-                <p className="text-xs text-muted-foreground">Live telemetry from SQLock DB</p>
+                <p className="text-sm font-semibold text-foreground">Analysis Output</p>
+                <p className="text-xs text-muted-foreground">System Response</p>
               </div>
               <div className={`rounded-full px-4 py-1 text-xs font-semibold ${serverRows ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"}`}>
-                {serverRows ? "Live" : "Idle"}
+                {serverRows ? "Connected" : "Ready"}
               </div>
             </div>
 

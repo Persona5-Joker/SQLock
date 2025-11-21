@@ -211,34 +211,55 @@ def apply_immediate_sql_lockout(username, detected_pattern):
     except mysql.connector.Error as error:
         log_suspicious_activity(f"Database error applying immediate lockout: {error}")
 
+import re
+
+# ...existing code...
+
 def detect_sql_injection_patterns(input_string):
     """
     Comprehensive SQL injection pattern detection.
-    Returns (is_malicious, detected_pattern)
+    Returns (is_malicious, detected_pattern, score)
     """
     if not input_string or not isinstance(input_string, str):
-        return False, None
+        return False, None, 0
     
-    # Common SQL injection patterns
-    sql_injection_patterns = {
-        "'": "Single quote injection",
-        '"': "Double quote injection", 
-        ";": "Statement terminator",
-        "--": "SQL comment",
-        "/*": "Block comment start",
-        "*/": "Block comment end",
-        " or ": "OR condition injection",
-        " and ": "AND condition injection",
-        " union ": "UNION injection",
-        " select ": "SELECT injection",
-        " insert ": "INSERT injection",
-        " delete ": "DELETE injection",
-        " update ": "UPDATE injection",
-        " drop ": "DROP injection",
-        " create ": "CREATE injection",
-        " alter ": "ALTER injection",
-        " exec ": "EXEC injection",
-        " execute ": "EXECUTE injection",
+    score = 0
+    detected_patterns = []
+    input_lower = input_string.lower()
+
+    # 1. Context-Aware Checks (Improvement 3) & Weighted Scoring (Improvement 1)
+    # Single quote is only suspicious if followed by SQL keywords or operators
+    # Regex explanation: ' followed by optional space, then OR, AND, ;, --, #, or /*
+    if re.search(r"'\s*(or|and|;|--|#|/\*)", input_lower):
+        score += 50
+        detected_patterns.append("Suspicious single quote usage")
+    elif "'" in input_string:
+        # Low score for just a quote (e.g. O'Reilly)
+        score += 5
+    
+    # 2. Regex Patterns (Improvement 2)
+    regex_patterns = [
+        (r"\b(union\s+select|union\s+all\s+select)\b", 100, "UNION-based injection"),
+        (r"\b(select\s+.*\s+from)\b", 80, "Direct data extraction"),
+        (r"\b(insert\s+into|update\s+.*set|delete\s+from)\b", 90, "Data modification attempt"),
+        (r"\b(drop\s+table|alter\s+table|truncate\s+table)\b", 100, "Destructive command"),
+        (r"\b(exec|execute)\s*\(", 90, "Code execution"),
+        (r"(\b(or|and)\b\s*[\w']+\s*=\s*[\w']+)", 80, "Tautology (OR 1=1)"), # Matches "OR 1=1", "OR 'a'='a'"
+        (r"(--|#|\/\*)", 30, "SQL Comment"), # Comments are suspicious but maybe not instant block alone
+        (r";", 30, "Statement stacking"),
+    ]
+
+    for pattern, weight, desc in regex_patterns:
+        if re.search(pattern, input_lower):
+            score += weight
+            detected_patterns.append(desc)
+
+    # 3. The "Basic SQLi Dictionary" (Improvement 5)
+    # The user wants the existing dictionary to trigger blocks. 
+    # I will include the specific keywords from the original list that aren't covered by regex or are specific signatures.
+    # If found, we ensure score is at least 100 (Blocked).
+    
+    basic_sqli_dictionary = {
         "1=1": "Tautology injection",
         "1'='1": "Quote tautology",
         "admin'--": "Admin bypass attempt",
@@ -248,27 +269,44 @@ def detect_sql_injection_patterns(input_string):
         "'; delete from": "Delete injection",
         "xp_": "Extended procedure",
         "sp_": "System procedure",
-        "exec(": "Dynamic execution",
-        "execute(": "Dynamic execution",
         "%27": "URL encoded single quote",
         "%22": "URL encoded double quote",
         "%3B": "URL encoded semicolon",
         "&#39;": "HTML encoded single quote",
         "&#34;": "HTML encoded double quote",
+        # Re-adding the keywords from original list as "Basic Dictionary" checks
+        " union ": "UNION injection",
+        " select ": "SELECT injection",
+        " insert ": "INSERT injection",
+        " delete ": "DELETE injection",
+        " update ": "UPDATE injection",
+        " drop ": "DROP injection",
+        " create ": "CREATE injection",
+        " alter ": "ALTER injection",
+        " truncate ": "TRUNCATE injection",
+        " exec ": "EXEC injection",
+        " execute ": "EXECUTE injection",
     }
-    
-    input_lower = input_string.lower()
-    
-    # Check for known patterns
-    for pattern, description in sql_injection_patterns.items():
+
+    for pattern, description in basic_sqli_dictionary.items():
         if pattern.lower() in input_lower:
-            return True, f"{description} ('{pattern}')"
+            score += 100 # Instant block threshold
+            detected_patterns.append(f"{description} (Dictionary Match)")
+
+    # 4. Multiple suspicious characters (from original code)
+    if len([c for c in input_string if c in "';\"--"]) > 3: # Increased threshold slightly
+        score += 20
+        detected_patterns.append("Multiple suspicious characters")
+
+    # Cap score at 100 for display consistency, or let it go higher? 
+    # Frontend expects 0-100 usually, but we can clamp it.
+    final_score = min(100, score)
     
-    # Check for multiple suspicious characters
-    if len([c for c in input_string if c in "';\"--"]) > 2:
-        return True, "Multiple suspicious characters"
+    is_malicious = final_score >= 80 # Threshold for blocking
     
-    return False, None
+    primary_pattern = detected_patterns[0] if detected_patterns else None
+    
+    return is_malicious, primary_pattern, final_score
 
 def reset_failed_attempts(username):
     """Reset failed login attempts for a user after successful login. Will NOT reset SQL injection lockouts."""
@@ -310,8 +348,8 @@ def authenticate_user(username, password):
         return None
     
     # Feature 2: SQL Injection Detection (Faizan)
-    username_malicious, username_pattern = detect_sql_injection_patterns(username)
-    password_malicious, password_pattern = detect_sql_injection_patterns(password)
+    username_malicious, username_pattern, _ = detect_sql_injection_patterns(username)
+    password_malicious, password_pattern, _ = detect_sql_injection_patterns(password)
     
     if username_malicious or password_malicious:
         detected_pattern = username_pattern if username_malicious else password_pattern
@@ -363,63 +401,6 @@ def authenticate_user(username, password):
         log_suspicious_activity(f"Database connection error: {error}")
         return None
 
-
-# TODO: Add your other database functions below, following the same secure pattern.
-#
-# REQUIRED DATABASE SETUP:
-# You need to create these tables in your 'sqlockdb' database:
-#
-# 1. Users table:
-#    CREATE TABLE users (
-#        id INT AUTO_INCREMENT PRIMARY KEY,
-#        username VARCHAR(255) NOT NULL UNIQUE,
-#        email VARCHAR(255),
-#        password_hash VARCHAR(64) NOT NULL,
-#        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-#    );
-#
-# 2. User security table for lockout functionality:
-#    CREATE TABLE user_security (
-#        id INT AUTO_INCREMENT PRIMARY KEY,
-#        username VARCHAR(255) NOT NULL UNIQUE,
-#        failed_attempts INT DEFAULT 0,
-#        last_failed_attempt TIMESTAMP NULL,
-#        lockout_until TIMESTAMP NULL,
-#        lockout_reason VARCHAR(50) NULL,
-#        INDEX idx_username (username),
-#        INDEX idx_lockout_until (lockout_until)
-#    );
-#
-# USAGE EXAMPLE:
-# # Attempt to authenticate a user
-# user = authenticate_user("john_doe", "user_password")
-# if user:
-#     print(f"Welcome, {user['username']}!")
-# else:
-#     # Check if account is locked
-#     lockout_info = get_lockout_info("john_doe")
-#     if lockout_info['locked']:
-#         minutes = lockout_info['time_remaining'] // 60
-#         seconds = lockout_info['time_remaining'] % 60
-#         print(f"Account locked! Try again in {minutes}m {seconds}s")
-#     else:
-#         print("Invalid credentials.")
-#
-# SECURITY FEATURES IMPLEMENTED:
-# - Input validation for all user inputs (Vinay)
-# - SQL Injection detection with immediate 24-hour lockout (Faizan)
-# - Progressive account lockout after 3 failed attempts: 15min → 1hr → 24hr (Dani)
-# - Comprehensive logging of all suspicious activity to pseudo_log.txt
-# - Secure parameterized queries throughout
-# - Password hashing (SHA-256)
-# - Automatic lockout expiration
-#
-# TEST FILES LOCATION: ./tests/
-# - setup_test_db.py: Database initialization
-# - test_comprehensive_security.py: Full security test suite  
-# - demo_sqllock.py: Interactive demo
-
-
 def _run_cli_interface() -> None:
     """Allows calling the mitigation helpers from the command line.
 
@@ -452,7 +433,7 @@ def _run_cli_interface() -> None:
 
     args = parser.parse_args()
 
-    malicious, pattern = detect_sql_injection_patterns(args.query)
+    malicious, pattern, score = detect_sql_injection_patterns(args.query)
     lockout_applied = False
 
     if malicious and args.apply_lockout and args.username:
@@ -463,6 +444,7 @@ def _run_cli_interface() -> None:
         "success": True,
         "malicious": malicious,
         "pattern": pattern,
+        "score": score,
         "lockout_applied": lockout_applied,
     }
 

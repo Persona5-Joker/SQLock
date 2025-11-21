@@ -1,8 +1,9 @@
 import pandas as pd
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 from sqlalchemy.exc import SQLAlchemyError
 import sys
 import json
+import re
 from datetime import datetime
 from urllib.parse import quote_plus
 
@@ -44,6 +45,7 @@ def read_data():
 # Common SQLi attack signatures (patterns that suggest malicious input)
 SQLI_SIGNATURES = [
     "' OR 1=1 --",         # Classic 'always true' injection
+    "or 1=1",              # simpler variant without quotes
     "union select",        # Attempt to combine results from multiple tables
     "waitfor delay",       # Time-based injection attempt
     "xp_cmdshell",         # SQL Server command execution attempt
@@ -51,7 +53,36 @@ SQLI_SIGNATURES = [
     "drop table",          # Table deletion attempt
     "insert into",         # Unauthorized data insertion
     "delete from",         # Unauthorized data deletion
+    "select .* from",      # generic select-from pattern
 ]
+
+
+def _signature_to_regex(sig: str) -> str:
+    """Convert a human-readable signature into a relaxed regex.
+
+    - Splits on whitespace, removes purely-punctuation tokens (like `--`),
+      escapes the rest and joins with '\\s+' so intermediate whitespace/punctuation is allowed.
+    - Adds word boundaries for single-word tokens when appropriate.
+    """
+    sig = sig.strip()
+    if not sig:
+        return re.escape(sig)
+
+    tokens = re.split(r"\s+", sig)
+    cleaned = []
+    for t in tokens:
+        # strip surrounding quotes
+        t2 = re.sub(r"^[\'\"]|[\'\"]$", "", t)
+        # skip tokens that are only punctuation (e.g. '--')
+        if re.fullmatch(r"[^A-Za-z0-9_=]+", t2):
+            continue
+        cleaned.append(re.escape(t2))
+
+    if not cleaned:
+        return re.escape(sig)
+    if len(cleaned) == 1:
+        return r"\b" + cleaned[0] + r"\b"
+    return r"\b" + r"\s+".join(cleaned) + r"\b"
 
 def analyze_logs_from_database():
     """
@@ -78,21 +109,29 @@ def analyze_logs_from_database():
         print("⚠️  No logs found in database.", file=sys.stderr)
         return []
     
-    # Combine all signatures into a single pattern
-    pattern = '|'.join(SQLI_SIGNATURES)
-    
+    # Build a robust regex pattern from the signatures
+    additional_patterns = [
+        r"\bor\s*1\s*=\s*1\b",
+        r"\bunion\s+select\b",
+        r"\bdrop\s+table\b",
+        r"\binsert\s+into\b",
+        r"\bdelete\s+from\b",
+        r"\bselect\b.*\bfrom\b",
+    ]
+
+    signature_patterns = [_signature_to_regex(s) for s in SQLI_SIGNATURES]
+    # Use a non-capturing group to avoid creating regex capture groups
+    pattern = '(?:' + '|'.join(signature_patterns + additional_patterns) + ')'
+
     # Determine which column contains the message/query to analyze
-    # Adjust column name based on your actual table structure
-    # Common column names: 'message', 'source', 'level', etc.
+    # Try a list of likely column names first, then fall back to first text column
+    preferred_cols = ['message', 'msg', 'query', 'query_template', 'request', 'log', 'body', 'payload', 'source', 'level']
     search_column = None
-    if 'message' in log_df.columns:
-        search_column = 'message'
-    elif 'source' in log_df.columns:
-        search_column = 'source'
-    elif 'level' in log_df.columns:
-        search_column = 'level'
-    else:
-        # Use first text column
+    for c in preferred_cols:
+        if c in log_df.columns:
+            search_column = c
+            break
+    if search_column is None:
         for col in log_df.columns:
             if log_df[col].dtype == 'object':
                 search_column = col
@@ -104,8 +143,14 @@ def analyze_logs_from_database():
     
     print(f"🔍 Analyzing column: {search_column}", file=sys.stderr)
     
-    # Mark suspicious rows
-    log_df['is_suspicious'] = log_df[search_column].astype(str).str.contains(pattern, case=False, na=False)
+    # Mark suspicious rows using regex search (case-insensitive)
+    try:
+        log_df['is_suspicious'] = log_df[search_column].astype(str).str.contains(pattern, case=False, na=False, regex=True)
+    except re.error as e:
+        # Fallback: if our pattern compilation fails, fall back to a simple substring check
+        print(f"⚠️  Regex error building pattern: {e}. Falling back to substring checks.", file=sys.stderr)
+        simple_pattern = '|'.join([s for s in SQLI_SIGNATURES])
+        log_df['is_suspicious'] = log_df[search_column].astype(str).str.contains(simple_pattern, case=False, na=False)
     
     # Filter flagged injections
     flagged_injections = log_df[log_df['is_suspicious'] == True]
@@ -140,19 +185,21 @@ def save_incidents_to_db(incidents):
     
     count = 0
     try:
-        with engine.connect() as connection:
+        # Use a transaction context to ensure commits; use SQLAlchemy text() for safe binding
+        with engine.begin() as connection:
+            sql = text(
+                "INSERT INTO Security_Event (decision, suspicion_score, query_template) VALUES (:decision, :score, :template)"
+            )
             for incident in incidents:
-                sql = """
-                    INSERT INTO Security_Event (decision, suspicion_score, query_template)
-                    VALUES (%s, %s, %s)
-                """
-                connection.execute(sql, (
-                    incident['decision'],
-                    incident['suspicion_score'],
-                    incident['query_template']
-                ))
+                connection.execute(
+                    sql,
+                    {
+                        'decision': incident['decision'],
+                        'score': incident['suspicion_score'],
+                        'template': incident['query_template'],
+                    },
+                )
                 count += 1
-            connection.commit()
     except Exception as e:
         print(f"❌ Error saving incidents to database: {e}", file=sys.stderr)
         return 0

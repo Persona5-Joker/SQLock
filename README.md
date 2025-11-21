@@ -90,7 +90,7 @@ Rule-Based Detection: Uses a set of detection rules to identify common SQLi payl
     Edit `.env` and set your MySQL connection string:
     
     ```bash
-    DATABASE_URL="mysql://username:password@localhost:3306/sqlock_db"
+    DATABASE_URL="mysql://username:password@localhost:3306/sqlockdb"
     ```
 
 ## Usage

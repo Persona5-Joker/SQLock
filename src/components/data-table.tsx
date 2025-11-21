@@ -164,7 +164,7 @@ export function DataTable<TData>({ columns, data, emptyMessage = "No results.", 
             onChange={(e) => table.setPageSize(Number(e.target.value))}
           >
             {[10, 20, 50].map((size) => (
-              <option key={size} value={size}>
+              <option key={size} value={size} className="select-option">
                 {size}
               </option>
             ))}

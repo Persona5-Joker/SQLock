@@ -24,7 +24,7 @@ const _teamData = teamData as TeamData;
 
 export const metadata: Metadata = {
   title: "SQLock",
-  description: "SQLock - SQLi detection demo",
+  description: "SQLock - SQL Injection Detection System",
   icons: [{ rel: "icon", url: "/SQLockLogo2.png" }],
 };
 
@@ -71,7 +71,7 @@ export default function RootLayout({
                 <div className="hidden flex-1 justify-center md:flex">
                   <NavigationMenu viewport={false}>
                     <NavigationMenuList className="gap-2">
-                      {[{ label: "Input", href: "/input" }, { label: "Logs", href: "/logs" }, { label: "Flags", href: "/flags" }].map((item) => (
+                      {[{ label: "Simulator", href: "/input" }, { label: "Logs", href: "/logs" }, { label: "Flags", href: "/flags" }].map((item) => (
                         <NavigationMenuItem key={item.href}>
                           <NavigationMenuLink asChild>
                             <Link
@@ -93,9 +93,6 @@ export default function RootLayout({
                       GitHub
                     </a>
                   </Button>
-                  <Button asChild className="rounded-full bg-gradient-to-br from-primary via-sky-400 to-indigo-500 px-5 text-sm font-semibold text-white shadow-md shadow-primary/30 transition hover:shadow-lg">
-                    <Link href="/input">Launch Console</Link>
-                  </Button>
                   <ThemeToggle />
                 </div>
               </div>
@@ -107,13 +104,13 @@ export default function RootLayout({
 
             <footer className="px-6 pb-10">
               <div className="mx-auto flex max-w-6xl flex-col gap-4 rounded-3xl border border-white/30 bg-card/70 px-6 py-4 text-sm text-muted-foreground backdrop-blur-xl dark:border-white/10 sm:flex-row sm:items-center sm:justify-between">
-                <p>© {new Date().getFullYear()} SQLock. Crafted for next-gen SQLi defense.</p>
+                <p>© {new Date().getFullYear()} SQLock. SQL Injection Detection & Mitigation Project.</p>
                 <div className="flex items-center gap-4 text-xs uppercase tracking-[0.2em] text-foreground/60">
-                  <span>Detect</span>
+                  <span>Detection</span>
                   <span className="h-2 w-2 rounded-full bg-primary" />
-                  <span>Prevent</span>
+                  <span>Mitigation</span>
                   <span className="h-2 w-2 rounded-full bg-primary" />
-                  <span>Learn</span>
+                  <span>Education</span>
                 </div>
               </div>
             </footer>

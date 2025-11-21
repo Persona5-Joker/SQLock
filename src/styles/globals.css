@@ -225,4 +225,14 @@
     -webkit-background-clip: text;
     color: transparent;
   }
+
+  .select-option {
+    background-color: white;
+    color: black;
+  }
+
+  .dark .select-option {
+    background-color: #030712;
+    color: white;
+  }
 }

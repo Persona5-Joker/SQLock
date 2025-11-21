@@ -32,6 +32,7 @@ const execFileAsync = promisify(execFile);
   success?: boolean;
   malicious?: boolean;
   pattern?: string | null;
+  score?: number;
   lockout_applied?: boolean;
 };
 
@@ -90,7 +91,7 @@ const execFileAsync = promisify(execFile);
         try {
           cliResult = JSON.parse(lastLine) as MitigationCliResult;
         } catch (parseError) {
-          console.error("Failed to parse mitigation output", parseError, stdoutText);
+          console.error("Failed to parse mitigation output", parseError, stdoutText, stderrText);
         }
       }
     }
@@ -99,9 +100,7 @@ const execFileAsync = promisify(execFile);
       return NextResponse.json(
         {
           success: false,
-          error: "Unable to parse mitigation results.",
-          stdout: stdoutText,
-          stderr: stderrText || null,
+          error: "Mitigation script did not return a valid result.",
         },
         { status: 500 },
       );
@@ -109,10 +108,10 @@ const execFileAsync = promisify(execFile);
 
     return NextResponse.json({
       success: true,
-      malicious: cliResult.malicious ?? false,
-      pattern: cliResult.pattern ?? null,
-      lockout_applied: cliResult.lockout_applied ?? false,
-      stderr: stderrText || null,
+      malicious: cliResult.malicious,
+      pattern: cliResult.pattern,
+      score: cliResult.score,
+      lockout_applied: cliResult.lockout_applied,
     });
   } catch (error) {
     console.error("Mitigation execution failed", error);

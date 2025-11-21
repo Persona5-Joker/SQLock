@@ -3,6 +3,7 @@ import { exec } from "child_process";
 import { promisify } from "util";
 import path from "path";
 import fs from "fs";
+import { promises as fsPromises } from "fs";
 
 const execAsync = promisify(exec);
 
@@ -39,17 +40,25 @@ export async function POST(_request: Request) {
 
     let chosenPython: string | null = null;
     for (const candidate of pythonCandidates) {
-      // If candidate is an absolute path, check file exists; otherwise assume it's on PATH
+      // If candidate is an absolute path, check file exists; otherwise verify it's callable on PATH
       if (candidate === "python") {
-        chosenPython = candidate;
-        break;
+        try {
+          // Verify that `python` on PATH is callable and not a stub that triggers store popups
+          await execAsync(`${candidate} --version`, { timeout: 5000 });
+          chosenPython = candidate;
+          break;
+        } catch {
+          // Not available on PATH or not callable; continue to next candidate
+          continue;
+        }
       }
+
       try {
         if (fs.existsSync(candidate)) {
           chosenPython = candidate;
           break;
         }
-      } catch (e) {
+      } catch {
         // ignore
       }
     }
@@ -98,10 +107,28 @@ export async function POST(_request: Request) {
 
     const safeErrors = stderrText.trim().length > 0 ? stderrText : null;
 
+    const csvPath = path.join(process.cwd(), "sqli_incidents.csv");
+    let csvBase64: string | null = null;
+    let csvFileName: string | null = null;
+
+    try {
+      const csvBuffer = await fsPromises.readFile(csvPath);
+      csvBase64 = csvBuffer.toString("base64");
+      csvFileName = `sqli_incidents_${new Date().toISOString().replace(/[:.]/g, "-")}.csv`;
+      await fsPromises.unlink(csvPath);
+    } catch (fileError) {
+      const code = (fileError as NodeJS.ErrnoException | undefined)?.code;
+      if (code && code !== "ENOENT") {
+        console.warn("Failed to process CSV output", fileError);
+      }
+    }
+
     return NextResponse.json({
       ...result,
       logs: stdoutText,
       errors: safeErrors,
+      csvBase64,
+      csvFileName,
     });
   } catch (error) {
     console.error("Error analyzing logs:", error);
