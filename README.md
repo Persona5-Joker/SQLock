@@ -67,10 +67,10 @@ Rule-Based Detection: Uses a set of detection rules to identify common SQLi payl
     
     - Create a MySQL database for the project (e.g., `sqlock_db`)
         
-    - Create a `Security_Event` table with the following schema:
+    - Create a `Logs` table with the following schema:
         
         ```sql
-        CREATE TABLE Security_Event (
+        CREATE TABLE Logs (
             id INT AUTO_INCREMENT PRIMARY KEY,
             ts_utc TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             decision VARCHAR(50) NOT NULL,
@@ -126,7 +126,6 @@ The application will be available at `http://localhost:3000`
 ### Detection Logic
 
 The application uses a client-side rule-based detection engine that analyzes queries for suspicious patterns:
-Current project organization:
 
 - **Block (Score 90)**: Queries containing `DROP`, `UNION`, `OR 1=1`, or SQL comments (`--`)
 - **Challenge (Score 55)**: Queries with suspicious combinations of `OR` and `=` operators
@@ -186,26 +185,38 @@ npm start
 
 ### Database Schema
 
-The `Security_Event` table stores all detection results:
+The `Logs` table stores all detection results:
 
 ```sql
-CREATE TABLE Security_Event (
+CREATE TABLE Logs (
     id INT AUTO_INCREMENT PRIMARY KEY,
     ts_utc TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     decision VARCHAR(50) NOT NULL,      -- 'allow', 'challenge', or 'block'
     suspicion_score INT NOT NULL,       -- 0-100 risk score
     query_template TEXT                  -- The query that was analyzed
 );
+```
+
+## Project Structure
+
+```
 SQLock/
-├── Mitigation-SRC              # Main security module
-├── pseudo_log.txt              # Security event logging
-├── tests/                      # All testing files
-│   ├── setup_test_db.py        # Database initialization
-│   ├── test_comprehensive_security.py  # Full test suite
-│   ├── demo_sqllock.py         # Interactive demo
-│   └── README.md               # Test documentation
-├── sqlock/                     # Next.js web interface
+├── Mitigation_SRC.py           # Standalone Python mitigation module
+├── mitigation_tool_history.md  # History of mitigation tool changes
+├── mitigation_tool_improvements.MD # Planned improvements
+├── test_queries.txt            # Test SQL queries
+├── test_sqlock_security.py     # Security test script
+├── src/                        # Next.js application source
+│   ├── app/                    # App router pages and API
+│   ├── components/             # React components
+│   ├── lib/                    # Utility functions
+│   ├── server/                 # Server-side logic (DB, logging)
+│   └── ...
+├── public/                     # Static assets
+├── tests/                      # Additional test files
+├── package.json                # Project dependencies and scripts
 └── README.md                   # This file
+```
 ```
 
 ## 🧠 Technologies Used
