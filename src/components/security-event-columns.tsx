@@ -13,6 +13,8 @@ function decisionStyles(decision: string) {
       return "bg-red-500/15 text-red-500";
     case "challenge":
       return "bg-amber-400/20 text-amber-500";
+    case "honeypot":
+      return "bg-purple-500/20 text-purple-500 border border-purple-500/30";
     default:
       return "bg-emerald-400/20 text-emerald-500";
   }

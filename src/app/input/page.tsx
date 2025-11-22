@@ -7,6 +7,7 @@ import { ArrowDown, ArrowUp, ArrowUpDown } from "lucide-react";
 import { Button } from "~/components/ui/button";
 import { Toggle } from "~/components/ui/toggle";
 import { DataTable } from "~/components/data-table";
+import honeypotData from "~/data/honeypot.json";
 
 type DetectionResult = {
   decision?: string;
@@ -86,6 +87,7 @@ export default function InputPage() {
   );
   const [mitigationError, setMitigationError] = useState<string | undefined>(undefined);
   const [enforceMitigation, setEnforceMitigation] = useState(false);
+  const [deceptionMode, setDeceptionMode] = useState(false);
 
   // Simple local detector to replace removed server/trpc
   function detectQuery(q: string): DetectionResult {
@@ -222,6 +224,37 @@ export default function InputPage() {
       }
 
       setLastQuery(executionSql);
+
+      // Deception Mode Logic
+      if (detection.malicious && deceptionMode) {
+        detection.decision = "honeypot";
+        
+        await logSecurityEvent(
+          "honeypot",
+          detection.score ?? 99,
+          executionSql
+        );
+
+        // Simulate network delay for realism
+        await new Promise(r => setTimeout(r, 600));
+
+        // Return fake data
+        const fakeColumns = Object.keys(honeypotData[0] || {});
+        const fakeRows = honeypotData.map((row) => {
+            const r: TableRecord = {};
+            fakeColumns.forEach((col) => {
+                // @ts-ignore
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any
+                r[col] = (row as any)[col]; 
+            });
+            return r;
+        });
+
+        setServerRows({ columns: fakeColumns, rows: fakeRows });
+        setInfoMessage("Query executed successfully. (Deception Active)");
+        setRunning(false);
+        return;
+      }
 
       // Log the security event to the database
       await logSecurityEvent(
@@ -440,6 +473,18 @@ export default function InputPage() {
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-lg font-semibold">Query Results</h2>
             <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground">Deception Mode</span>
+                <Toggle
+                  pressed={deceptionMode}
+                  onPressedChange={setDeceptionMode}
+                  variant="outline"
+                  className={`h-6 px-2 text-xs ${deceptionMode ? "bg-amber-500/20 text-amber-600 dark:text-amber-400 border-amber-500/50" : ""}`}
+                  aria-label="Toggle deception mode"
+                >
+                  {deceptionMode ? "ACTIVE" : "OFF"}
+                </Toggle>
+              </div>
               <div className="flex items-center gap-2">
                 <span className="text-sm text-muted-foreground">Enforce Mitigation</span>
                 <Toggle

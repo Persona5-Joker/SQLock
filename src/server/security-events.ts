@@ -25,7 +25,7 @@ export async function getFlaggedSecurityEvents(limit = 50): Promise<SecurityEven
   const sql = `
     SELECT id, ts_utc, decision, suspicion_score, query_template
     FROM Logs
-    WHERE decision IN ('block', 'challenge')
+    WHERE decision IN ('block', 'challenge', 'honeypot')
     ORDER BY ts_utc DESC
     LIMIT ?
   `;
