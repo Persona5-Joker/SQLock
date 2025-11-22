@@ -5,6 +5,23 @@
 import "./src/env.js";
 
 /** @type {import("next").NextConfig} */
-const config = {};
+const config = {
+    webpack: (config, { isServer }) => {
+        if (!isServer) {
+            config.resolve.fallback = {
+                ...config.resolve.fallback,
+                fs: false,
+                "react-native-fs": false,
+                path: false,
+                crypto: false,
+            };
+        }
+        config.resolve.alias = {
+            ...config.resolve.alias,
+            "react-native-fs": false,
+        };
+        return config;
+    },
+};
 
 export default config;

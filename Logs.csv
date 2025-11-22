@@ -1,0 +1,2 @@
+﻿"id","ts_utc","decision","suspicion_score","query_template"
+1,"2025-11-22 06:40:15","block",0.99,"SELECT * FROM users"
