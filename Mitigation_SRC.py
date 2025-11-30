@@ -9,7 +9,7 @@ import re
 # TODO: Fill this dictionary with your database connection details.
 # It is best practice to load these from a separate config file or environment variables.
 DB_CONFIG = {
-    'host': '10.147.17.110',             
+    'host': '100.114.100.66',             
     'database': 'sqlockdb',             
     'user': 'VinayNair',                 
     'password': 'password',              # Your MySQL password

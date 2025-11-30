@@ -8,7 +8,7 @@ from datetime import datetime
 
 # Database configuration - should match Mitigation-SRC
 DB_CONFIG = {
-    'host': '10.147.17.110',
+    'host': '100.114.100.66',
     'database': 'sqlockdb',
     'user': 'VinayNair',
     'password': 'password',
