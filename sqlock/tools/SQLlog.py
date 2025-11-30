@@ -10,7 +10,7 @@ from urllib.parse import quote_plus
 # Database configuration
 DB_USER = 'DavidWu'
 DB_PASS = 'password'
-DB_HOST = '10.147.17.110'
+DB_HOST = '127.0.0.1'
 DB_PORT = '3306'
 DB_NAME = 'sqlockdb'
 
