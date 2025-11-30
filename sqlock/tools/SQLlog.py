@@ -8,9 +8,9 @@ from datetime import datetime
 from urllib.parse import quote_plus
 
 # Database configuration
-DB_USER = 'DavidWu'
+DB_USER = 'root'
 DB_PASS = 'password'
-DB_HOST = '10.147.17.110'
+DB_HOST = 'localhost'
 DB_PORT = '3306'
 DB_NAME = 'sqlockdb'
 

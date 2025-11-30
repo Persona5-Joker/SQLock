@@ -8,9 +8,9 @@ from datetime import datetime
 
 # Database configuration - should match Mitigation-SRC
 DB_CONFIG = {
-    'host': '10.147.17.110',
+    'host': 'localhost',
     'database': 'sqlockdb',
-    'user': 'VinayNair',
+    'user': 'root',
     'password': 'password',
     'port': 3306,
     'autocommit': True,
